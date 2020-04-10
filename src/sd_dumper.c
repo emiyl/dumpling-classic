@@ -79,7 +79,7 @@ int DumpDir(char *pPath, const char * target_path)
     dir = opendir(pPath);
     if (dir == NULL)
     {
-        console_printf(1, "Can't open %s\n", pPath);
+        console_printf(1, "Can't open %s - Ensure you selected the correct region\n", pPath);
         return -1;
     }
 

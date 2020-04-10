@@ -186,10 +186,10 @@ int Menu_Main(void)
     OSScreenFlipBuffersEx(0);
     OSScreenFlipBuffersEx(1);
 
-    int res = IOSUHAX_Open();
+    int res = IOSUHAX_Open(NULL);
     if(res < 0)
     {
-        console_printf(1, "IOSUHAX_open failed\n");
+        console_printf(1, "IOSUHAX_open failed - Ensure you are using MochaCFW\n");
         sleep(2);
         return 0;
     }
@@ -207,28 +207,37 @@ int Menu_Main(void)
 
     int initScreen = 1;
 
+    static const char* paths_output[] =
+    {
+				"account.dat",
+        "ccerts",
+        "scerts",
+        "Miis",
+        "Friends List (JP)",
+        "Friends List (US)",
+        "Friends List (EU)",
+    };
+
     static const char* selection_paths[] =
     {
-        "/dev/odd01",
-        "/dev/odd02",
-        "/dev/odd03",
-        "/dev/odd04",
-        "/dev/slccmpt01",
-        "/vol/system",
-        "/vol/storage_mlc01",
-        "/vol/storage_usb01",
+				"/vol/storage_mlc01/usr/save/system/act/",
+        "/vol/storage_mlc01/sys/title/0005001b/10054000/content/ccerts",
+        "/vol/storage_mlc01/sys/title/0005001b/10054000/content/scerts",
+        "/vol/storage_mlc01/sys/title/0005001b/10056000/",
+        "/vol/storage_mlc01/sys/title/00050030/1001500A/",
+        "/vol/storage_mlc01/sys/title/00050030/1001510A/",
+        "/vol/storage_mlc01/sys/title/00050030/1001520A/",
     };
 
     static const char* selection_paths_description[] =
     {
-        "(disc tickets)",
-        "(disc update)",
-        "(disc content)",
-        "(disc content)",
-        "(vWii slc content)",
-        "(slc content)",
-        "(mlc content)",
-        "(usb01 content)",
+        "",
+        "",
+        "",
+        "",
+        "(JP)",
+        "(US)",
+        "(EU)",
     };
 
     int selectedItem = 0;
@@ -262,21 +271,22 @@ int Menu_Main(void)
             OSScreenClearBufferEx(1, 0);
 
 
-            console_print_pos(0, 1, "-- File Tree 2 SD v0.1 by Dimok --");
+            console_print_pos(0, 1, "-- Dumpling v0.0.1 by emiyl --");
+            console_print_pos(0, 2, "Based on FT2SD by Dimok");
 
-            console_print_pos(0, 3, "Select what to dump to sd:/ft2sd and press A to start dump.");
-            console_print_pos(0, 4, "Hold B to cancel dump.");
+            console_print_pos(0, 4, "Select what to dump to SD card and press A to start dump.");
+            console_print_pos(0, 5, "Hold B to cancel dump.");
 
             u32 i;
             for(i = 0; i < (sizeof(selection_paths) / 4); i++)
             {
                 if(selectedItem == (int)i)
                 {
-                    console_print_pos(0, 6 + i, "--> %s %s", selection_paths[i], selection_paths_description[i]);
+                    console_print_pos(0, 7 + i, "--> %s %s", selection_paths[i], selection_paths_description[i]);
                 }
                 else
                 {
-                    console_print_pos(0, 6 + i, "    %s %s", selection_paths[i], selection_paths_description[i]);
+                    console_print_pos(0, 7 + i, "    %s %s", selection_paths[i], selection_paths_description[i]);
                 }
             }
             // Flip buffers
@@ -302,8 +312,8 @@ int Menu_Main(void)
 
         if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_A))
         {
-            const char *dev_path = (selectedItem < 5) ? selection_paths[selectedItem] : NULL;
-            const char *mount_path = (selectedItem >= 5) ? selection_paths[selectedItem] : "/vol/storage_ft_content";
+            const char *dev_path = (selectedItem < 0) ? selection_paths[selectedItem] : NULL;
+            const char *mount_path = (selectedItem >= 0) ? selection_paths[selectedItem] : "/vol/storage_ft_content";
 
             int res = mount_fs("dev", fsaFd, dev_path, mount_path);
             if(res < 0)
@@ -316,7 +326,9 @@ int Menu_Main(void)
                 if(targetPath)
                 {
                     strcpy(targetPath, "dev:/");
-                    DumpDir(targetPath, "sd:/ft2sd");
+										char sdPath[255];
+										snprintf(sdPath, sizeof(sdPath), "sd:/dumpling%s", selection_paths[selectedItem]);
+                    DumpDir(targetPath, sdPath);
 
                     free(targetPath);
                 }
@@ -364,4 +376,3 @@ int Menu_Main(void)
 
     return EXIT_SUCCESS;
 }
-
