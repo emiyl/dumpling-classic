@@ -28,7 +28,7 @@ static int DumpFile(char *pPath, const char * output_path)
     else
         pFilename++;
 
-    if (detailed_logs) console_printf(1, "0x%X - %s", 0, pSlash);
+    console_printf(1, "0x%X - %s", 0, pSlash);
 
     unsigned char* dataBuf = (unsigned char*)memalign(0x40, BUFFER_SIZE);
     if(!dataBuf) {

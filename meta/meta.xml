@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <app version="1">
-  <name>FT2SD</name>
-  <coder>Dimok</coder>
-  <version>0.1</version>
-  <release_date>20161101200000</release_date>
-  <short_description>File Tree 2 SD</short_description>
-  <long_description>File tree to SD dumper.
-  </long_description>
-
+  <name>dumpling</name>
+  <coder>emiyl</coder>
+  <version>0.1.1</version>
+  <release_date>20200411200000</release_date>
+  <short_description>Simple Cemu File Dumper</short_description>
+  <long_description>Simple Cemu File Dumper</long_description>
 </app>

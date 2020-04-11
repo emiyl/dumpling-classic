@@ -127,7 +127,7 @@ int CheckCancel(void)
     return 0;
 }
 
-int dump_func(const char *mount_path, int selectedItem, int fsaFd, int initScreen)
+int dump_func(const char *mount_path, int selectedItem, int fsaFd, int initScreen, int dump_source)
 {
 		int res = mount_fs("dev", fsaFd, NULL, mount_path);
 		if(res < 0)
@@ -141,13 +141,20 @@ int dump_func(const char *mount_path, int selectedItem, int fsaFd, int initScree
 				{
 						strcpy(targetPath, "dev:/");
 						char sdPath[255] = "sd:/dumpling";
-						if (selectedItem == 0) snprintf(sdPath, sizeof(sdPath), "sd:/dumpling/online_files/%s", mount_path + 13);
-						if (selectedItem == 1) strcpy(sdPath, "sd:/dumpling/friends_list");
-						if (selectedItem == 2) strcpy(sdPath, "sd:/dumpling/games");
-						if (selectedItem == 3) strcpy(sdPath, "sd:/dumpling/updates");
-						if (selectedItem == 4) strcpy(sdPath, "sd:/dumpling/dlc");
-						if (selectedItem == 5) strcpy(sdPath, "sd:/dumpling/saves");
-						if (selectedItem == 6) strcpy(sdPath, "sd:/dumpling/nand");
+						if (dump_source) {
+							if (selectedItem == 0) strcpy(sdPath, "sd:/dumpling/games");
+							if (selectedItem == 1) strcpy(sdPath, "sd:/dumpling/updates");
+							if (selectedItem == 2) strcpy(sdPath, "sd:/dumpling/dlc");
+							if (selectedItem == 3) strcpy(sdPath, "sd:/dumpling/saves");
+						} else {
+							if (selectedItem == 0) snprintf(sdPath, sizeof(sdPath), "sd:/dumpling/online_files/%s", mount_path + 13);
+							if (selectedItem == 1) strcpy(sdPath, "sd:/dumpling/friends_list");
+							if (selectedItem == 2) strcpy(sdPath, "sd:/dumpling/games");
+							if (selectedItem == 3) strcpy(sdPath, "sd:/dumpling/updates");
+							if (selectedItem == 4) strcpy(sdPath, "sd:/dumpling/dlc");
+							if (selectedItem == 5) strcpy(sdPath, "sd:/dumpling/saves");
+							if (selectedItem == 6) strcpy(sdPath, "sd:/dumpling/nand");
+						}
 						DumpDir(targetPath, sdPath);
 
 						free(targetPath);
@@ -240,40 +247,47 @@ int Menu_Main(void)
 
     int initScreen = 1;
 
-    static const char* paths_output[] =
+    static const char* mlc_paths_output[] =
     {
 				"Online Files",
         "Friends List",
-        "All digital games on MLC01",
-        "All digital updates on MLC01",
-        "All digital DLC on MLC01",
-        "All save data on MLC01",
+        "All digital games",
+        "All digital updates",
+        "All digital DLC",
+        "All save data",
         "Full MLC01 (Very long time!)",
     };
 
-    static const char* selection_paths[] =
+    static const char* usb_paths_output[] =
+    {
+        "All digital games",
+        "All digital updates",
+        "All digital DLC",
+        "All save data",
+    };
+
+    static const char* mlc_selection_paths[] =
     {
 				NULL,
         NULL,
-        "/vol/storage_mlc01/usr/title/00050000/",
-        "/vol/storage_mlc01/usr/title/0005000E/",
-        "/vol/storage_mlc01/usr/title/0005000C/",
-        "/vol/storage_mlc01/usr/save/00050000/",
-        "/vol/storage_mlc01/",
+        "/vol/storage_mlc01/usr/title/00050000/", // digital games directory
+        "/vol/storage_mlc01/usr/title/0005000E/", // updates directory
+        "/vol/storage_mlc01/usr/title/0005000C/", // DLC directory
+        "/vol/storage_mlc01/usr/save/00050000/", // save data directory
+        "/vol/storage_mlc01/", // nand directory
     };
 
-    /*static const char* selection_paths_description[] =
+    static const char* usb_selection_paths[] =
     {
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-    };*/
+        "/vol/storage_usb01/usr/title/00050000/", // digital games directory
+        "/vol/storage_usb01/usr/title/0005000E/", // updates directory
+        "/vol/storage_usb01/usr/title/0005000C/", // DLC directory
+        "/vol/storage_usb01/usr/save/00050000/", // save data directory
+    };
 
     int selectedItem = 0;
+
+		int dump_source = 0;
 
     while(1)
     {
@@ -304,24 +318,27 @@ int Menu_Main(void)
             OSScreenClearBufferEx(1, 0);
 
 
-            console_print_pos(0, 1, "-- Dumpling v0.1.1 by emiyl --");
-            console_print_pos(0, 2, "Based on FT2SD by Dimok");
+            console_print_pos(0, 1, "-- Dumpling v0.2.0 by emiyl --");
+            console_print_pos(0, 2, "Mode: %s", (dump_source) ? "USB" : "MLC");
 
             console_print_pos(0, 4, "Select what to dump to SD card and press A to start dump.");
-            console_print_pos(0, 5, "Press HOME to exit.");
+            console_print_pos(0, 5, "Use L and R to change where you're dumping from.");
 
             u32 i;
-            for(i = 0; i < (sizeof(selection_paths) / 4); i++)
+						for(i = 0; i < (((dump_source) ? sizeof(usb_selection_paths) : sizeof(mlc_selection_paths)) / 4); i++)
             {
                 if(selectedItem == (int)i)
                 {
-                    console_print_pos(0, 7 + i, "--> %s", paths_output[i]); //, selection_paths_description[i]);
+                    console_print_pos(0, 7 + i, "--> %s", ((dump_source) ? usb_paths_output : mlc_paths_output)[i]); //, selection_paths_description[i]);
                 }
                 else
                 {
-                    console_print_pos(0, 7 + i, "    %s", paths_output[i]); //, selection_paths_description[i]);
+                    console_print_pos(0, 7 + i, "    %s", ((dump_source) ? usb_paths_output : mlc_paths_output)[i]); //, selection_paths_description[i]);
                 }
             }
+
+            console_print_pos(0, 15, "Dumping may appear to hang sometimes, however this is normal.");
+            console_print_pos(0, 16, "Be patient and wait for it to finish.");
             // Flip buffers
             OSScreenFlipBuffersEx(0);
             OSScreenFlipBuffersEx(1);
@@ -329,33 +346,49 @@ int Menu_Main(void)
 
         if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_DOWN))
         {
-            selectedItem = (selectedItem + 1) % (sizeof(selection_paths) / 4);
+            selectedItem = (selectedItem + 1) % (((dump_source) ? sizeof(usb_selection_paths) : sizeof(mlc_selection_paths)) / 4);
             initScreen = 1;
-            usleep(100000);
+            usleep(200000);
         }
 
         if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_UP))
         {
             selectedItem--;
             if(selectedItem < 0)
-                selectedItem =  (sizeof(selection_paths) / 4) - 1;
+                selectedItem =  (((dump_source) ? sizeof(usb_selection_paths) : sizeof(mlc_selection_paths)) / 4) - 1;
             initScreen = 1;
-            usleep(100000);
+            usleep(200000);
+        }
+
+        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & (VPAD_BUTTON_L)))
+        {
+            dump_source = !dump_source;
+						selectedItem = 0;
+            initScreen = 1;
+            usleep(200000);
+        }
+
+        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & (VPAD_BUTTON_R)))
+        {
+            dump_source = !dump_source;
+						selectedItem = 0;
+            initScreen = 1;
+            usleep(200000);
         }
 
         if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_A))
         {
-						if (selectedItem > 2) initScreen = dump_func(selection_paths[selectedItem], selectedItem, fsaFd, initScreen);
+						if (dump_source | (selectedItem > 2)) initScreen = dump_func(((dump_source) ? usb_selection_paths : mlc_selection_paths)[selectedItem], selectedItem, fsaFd, initScreen, dump_source);
 						else if (selectedItem == 0) {
-							initScreen = dump_func("/vol/storage_mlc01/usr/save/system/act/"											, selectedItem, fsaFd, initScreen);
-							initScreen = dump_func("/vol/storage_mlc01/sys/title/0005001b/10054000/content/ccerts", selectedItem, fsaFd, initScreen);
-							initScreen = dump_func("/vol/storage_mlc01/sys/title/0005001b/10054000/content/scerts", selectedItem, fsaFd, initScreen);
-							initScreen = dump_func("/vol/storage_mlc01/sys/title/0005001b/10056000/"							, selectedItem, fsaFd, initScreen);
+							initScreen = dump_func("/vol/storage_mlc01/usr/save/system/act/"											, selectedItem, fsaFd, initScreen, dump_source); // account.dat
+							initScreen = dump_func("/vol/storage_mlc01/sys/title/0005001b/10054000/content/ccerts", selectedItem, fsaFd, initScreen, dump_source); // ccerts
+							initScreen = dump_func("/vol/storage_mlc01/sys/title/0005001b/10054000/content/scerts", selectedItem, fsaFd, initScreen, dump_source); // scerts
+							initScreen = dump_func("/vol/storage_mlc01/sys/title/0005001b/10056000/"							, selectedItem, fsaFd, initScreen, dump_source); // mii data
 						}
 						else if (selectedItem == 1) {
-							initScreen = dump_func("/vol/storage_mlc01/sys/title/00050030/1001500A/", selectedItem, fsaFd, initScreen);
-							initScreen = dump_func("/vol/storage_mlc01/sys/title/00050030/1001510A/", selectedItem, fsaFd, initScreen);
-							initScreen = dump_func("/vol/storage_mlc01/sys/title/00050030/1001520A/", selectedItem, fsaFd, initScreen);
+							initScreen = dump_func("/vol/storage_mlc01/sys/title/00050030/1001500A/", selectedItem, fsaFd, initScreen, dump_source); // JP friends list
+							initScreen = dump_func("/vol/storage_mlc01/sys/title/00050030/1001510A/", selectedItem, fsaFd, initScreen, dump_source); // US friends list
+							initScreen = dump_func("/vol/storage_mlc01/sys/title/00050030/1001520A/", selectedItem, fsaFd, initScreen, dump_source); // EU friends list
 							console_printf(1, "Dump complete");
 							sleep(1);
 						}
