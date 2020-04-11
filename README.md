@@ -13,8 +13,8 @@ To install, simply download the dumpling `.elf` file from the [releases](https:/
 - Dumps files needed for Cemu online play
   - You must dump `otp.bin` and `seeprom.bin` separately with [wiiu-nanddumper](https://github.com/koolkdev/wiiu-nanddumper)
 - Dumps the Friends List app for use in Cemu
-- Dumps all digital games, updates and DLC stored on internal storage
-- Dumps all game saves on internal storage
+- Dumps all digital games, updates and DLC on the system
+- Dumps all game saves on the system
 - Dumps the entire decrypted nand
   - This can take over 2 hours on a 32GB Wii U
   
