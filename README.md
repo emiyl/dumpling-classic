@@ -22,4 +22,4 @@ To install, simply download the dumpling `.elf` file from the [releases](https:/
 
 Currently the software will dump _all_ games (or updates/DLC/saves) on internal storage. In a later update a feature will be added to only dump specific games.
 
-Dumpling also only supports dumping from internal storage, but dumping from disk and USB will be coming soon.
+Dumpling also only supports dumping from internal storage and USB, but disk dumping will be coming
