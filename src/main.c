@@ -141,14 +141,13 @@ int dump_func(const char *mount_path, int selectedItem, int fsaFd, int initScree
 				{
 						strcpy(targetPath, "dev:/");
 						char sdPath[255] = "sd:/dumpling";
-						if (selectedItem == 0) snprintf(sdPath, sizeof(sdPath), "sd:/dumpling/online_files%s", mount_path);
-						if (selectedItem == 1) snprintf(sdPath, sizeof(sdPath), "sd:/dumpling/friends_list%s", mount_path);
-						if (selectedItem == 2) snprintf(sdPath, sizeof(sdPath), "sd:/dumpling/games");
-						if (selectedItem == 3) snprintf(sdPath, sizeof(sdPath), "sd:/dumpling/updates");
-						if (selectedItem == 4) snprintf(sdPath, sizeof(sdPath), "sd:/dumpling/dlc");
-						if (selectedItem == 5) snprintf(sdPath, sizeof(sdPath), "sd:/dumpling/saves");
-						if (selectedItem == 6) snprintf(sdPath, sizeof(sdPath), "sd:/dumpling/nand");
-						//snprintf(sdPath, sizeof(sdPath), "sd:/dumpling%s", mount_path);
+						if (selectedItem == 0) snprintf(sdPath, sizeof(sdPath), "sd:/dumpling/online_files/%s", mount_path + 13);
+						if (selectedItem == 1) strcpy(sdPath, "sd:/dumpling/friends_list");
+						if (selectedItem == 2) strcpy(sdPath, "sd:/dumpling/games");
+						if (selectedItem == 3) strcpy(sdPath, "sd:/dumpling/updates");
+						if (selectedItem == 4) strcpy(sdPath, "sd:/dumpling/dlc");
+						if (selectedItem == 5) strcpy(sdPath, "sd:/dumpling/saves");
+						if (selectedItem == 6) strcpy(sdPath, "sd:/dumpling/nand");
 						DumpDir(targetPath, sdPath);
 
 						free(targetPath);
@@ -305,7 +304,7 @@ int Menu_Main(void)
             OSScreenClearBufferEx(1, 0);
 
 
-            console_print_pos(0, 1, "-- Dumpling v0.1 by emiyl --");
+            console_print_pos(0, 1, "-- Dumpling v0.1.1 by emiyl --");
             console_print_pos(0, 2, "Based on FT2SD by Dimok");
 
             console_print_pos(0, 4, "Select what to dump to SD card and press A to start dump.");
