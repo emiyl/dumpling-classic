@@ -14,6 +14,8 @@
 void console_printf(int newline, const char *format, ...);
 int checkCancel(void);
 
+const bool detailed_logs = false;
+
 static int DumpFile(char *pPath, const char * output_path)
 {
     char *pSlash = strchr(pPath, '/');
@@ -26,7 +28,7 @@ static int DumpFile(char *pPath, const char * output_path)
     else
         pFilename++;
 
-    console_printf(1, "0x%X - %s", 0, pSlash);
+    if (detailed_logs) console_printf(1, "0x%X - %s", 0, pSlash);
 
     unsigned char* dataBuf = (unsigned char*)memalign(0x40, BUFFER_SIZE);
     if(!dataBuf) {
@@ -34,14 +36,14 @@ static int DumpFile(char *pPath, const char * output_path)
     }
 
     FILE *pReadFile = fopen(pPath, "rb");
-    if(!pReadFile)
+    if(!pReadFile && detailed_logs)
     {
         console_printf(1, "Can't open file %s\n", pPath);
         return -2;
     }
 
     FILE *pWriteFile = fopen(output_path, "wb");
-    if(!pWriteFile)
+    if(!pWriteFile && detailed_logs)
     {
         console_printf(1, "Can't open write file %s\n", output_path);
         fclose(pReadFile);
@@ -77,9 +79,9 @@ int DumpDir(char *pPath, const char * target_path)
     DIR *dir = NULL;
 
     dir = opendir(pPath);
-    if (dir == NULL)
+    if (dir == NULL && detailed_logs)
     {
-        console_printf(1, "Can't open %s - Ensure you selected the correct region\n", pPath);
+        console_printf(1, "Can't open %s\n", pPath);
         return -1;
     }
 
