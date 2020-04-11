@@ -23,3 +23,9 @@ To install, simply download the dumpling `.elf` file from the [releases](https:/
 Currently the software will dump _all_ games (or updates/DLC/saves) on internal storage. In a later update a feature will be added to only dump specific games.
 
 Dumpling also only supports dumping from internal storage and USB, but disk dumping will be coming
+
+## Credits
+
+- dimok789 for writing [ft2sd](https://github.com/dimok789/ft2sd/) which this application is based off of
+- shepgoba for being good at C
+- chrissie for helping me test USB dumping
