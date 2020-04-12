@@ -6,13 +6,27 @@
 #include <sys/dirent.h>
 #include "dynamic_libs/os_functions.h"
 #include "dynamic_libs/fs_functions.h"
+#include "dynamic_libs/vpad_functions.h"
 #include "fs/fs_utils.h"
 #include "main.h"
 
 #define BUFFER_SIZE     0x80000
 
 void console_printf(int newline, const char *format, ...);
-int checkCancel(void);
+int CheckCancel(void)
+{
+    int vpadError = -1;
+    VPADData vpad;
+
+    //! update only at 50 Hz, thats more than enough
+    VPADRead(0, &vpad, 1, &vpadError);
+
+    if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_B))
+    {
+        return 1;
+    }
+    return 0;
+}
 
 const bool detailed_logs = false;
 

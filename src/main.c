@@ -112,7 +112,7 @@ void console_printf(int newline, const char *format, ...)
 	OSScreenFlipBuffersEx(1);
 }
 
-int CheckCancel(void)
+/*int CheckCancel(void)
 {
     int vpadError = -1;
     VPADData vpad;
@@ -125,7 +125,7 @@ int CheckCancel(void)
         return 1;
     }
     return 0;
-}
+}*/
 
 int dump_func(const char *mount_path, int selectedItem, int fsaFd, int initScreen, int dump_source)
 {
@@ -288,6 +288,7 @@ int Menu_Main(void)
     int selectedItem = 0;
 
 		int dump_source = 0;
+		//int dump_target = 0;
 
     while(1)
     {
@@ -318,11 +319,12 @@ int Menu_Main(void)
             OSScreenClearBufferEx(1, 0);
 
 
-            console_print_pos(0, 1, "-- Dumpling v0.2.1 by emiyl --");
-            console_print_pos(0, 2, "Mode: %s", (dump_source) ? "USB" : "MLC");
+            console_print_pos(0, 1, "-- Dumpling v0.2.2 by emiyl --");
+            console_print_pos(0, 2, "Source: %s", (dump_source) ? "USB" : "MLC");
+            //console_print_pos(0, 2, "Target: %s", (dump_target) ? "USB" : "SD");
 
             console_print_pos(0, 4, "Select what to dump to SD card and press A to start dump.");
-            console_print_pos(0, 5, "Use L and R to change where you're dumping from.");
+            console_print_pos(0, 5, "Use L/R to change source.");// and ZL/ZR to change target.");
 
             u32 i;
 						for(i = 0; i < (((dump_source) ? sizeof(usb_selection_paths) : sizeof(mlc_selection_paths)) / 4); i++)
@@ -336,6 +338,8 @@ int Menu_Main(void)
                     console_print_pos(0, 7 + i, "    %s", ((dump_source) ? usb_paths_output : mlc_paths_output)[i]); //, selection_paths_description[i]);
                 }
             }
+
+            console_print_pos(0, 16, "Hold B to cancel dumping.");
 
             // Flip buffers
             OSScreenFlipBuffersEx(0);
@@ -376,7 +380,7 @@ int Menu_Main(void)
 
         if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_A))
         {
-						if (dump_source | (selectedItem > 2)) initScreen = dump_func(((dump_source) ? usb_selection_paths : mlc_selection_paths)[selectedItem], selectedItem, fsaFd, initScreen, dump_source);
+						if (dump_source | (selectedItem > 1)) initScreen = dump_func(((dump_source) ? usb_selection_paths : mlc_selection_paths)[selectedItem], selectedItem, fsaFd, initScreen, dump_source);
 						else if (selectedItem == 0) {
 							initScreen = dump_func("/vol/storage_mlc01/usr/save/system/act/"											, selectedItem, fsaFd, initScreen, dump_source); // account.dat
 							initScreen = dump_func("/vol/storage_mlc01/sys/title/0005001b/10054000/content/ccerts", selectedItem, fsaFd, initScreen, dump_source); // ccerts
