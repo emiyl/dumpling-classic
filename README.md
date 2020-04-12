@@ -16,7 +16,7 @@ To install, simply download the dumpling `.elf` file from the [releases](https:/
 - Dumps all digital games, updates and DLC on the system
 - Dumps all game saves on the system
 - Dumps the entire decrypted nand
-  - This can take over 2 hours on a 32GB Wii U
+  - This can take up to 2 hours on a 32GB Wii U (only if the 32GB is fully used up)
   
 ## To-do
 
