@@ -38,8 +38,8 @@ static int DumpFile(char *pPath, const char * output_path)
     FILE *pReadFile = fopen(pPath, "rb");
     if(!pReadFile)
     {
-        //console_printf(1, "Can't open file %s\n", pPath);
-        console_printf(1, "Symlink file, skipping...\n", pPath);
+        if (detailed_logs) console_printf(1, "Can't open file %s\n", pPath);
+        if (!detailed_logs) console_printf(1, "Symlink file, skipping...\n", pPath);
         return -2;
     }
 
