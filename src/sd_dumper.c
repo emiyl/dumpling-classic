@@ -36,16 +36,17 @@ static int DumpFile(char *pPath, const char * output_path)
     }
 
     FILE *pReadFile = fopen(pPath, "rb");
-    if(!pReadFile && detailed_logs)
+    if(!pReadFile)
     {
-        console_printf(1, "Can't open file %s\n", pPath);
+        //console_printf(1, "Can't open file %s\n", pPath);
+        console_printf(1, "Symlink file, skipping...\n", pPath);
         return -2;
     }
 
     FILE *pWriteFile = fopen(output_path, "wb");
-    if(!pWriteFile && detailed_logs)
+    if(!pWriteFile)
     {
-        console_printf(1, "Can't open write file %s\n", output_path);
+        if (detailed_logs) console_printf(1, "Can't open write file %s\n", output_path);
         fclose(pReadFile);
         return -3;
     }
@@ -79,9 +80,9 @@ int DumpDir(char *pPath, const char * target_path)
     DIR *dir = NULL;
 
     dir = opendir(pPath);
-    if (dir == NULL && detailed_logs)
+    if (dir == NULL)
     {
-        console_printf(1, "Can't open %s\n", pPath);
+        if (detailed_logs) console_printf(1, "Can't open %s\n", pPath);
         return -1;
     }
 

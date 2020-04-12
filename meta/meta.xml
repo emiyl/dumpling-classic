@@ -2,7 +2,7 @@
 <app version="1">
   <name>dumpling</name>
   <coder>emiyl</coder>
-  <version>0.2</version>
+  <version>0.2.1</version>
   <release_date>20200411200000</release_date>
   <short_description>Simple Cemu File Dumper</short_description>
   <long_description>Simple Cemu File Dumper</long_description>

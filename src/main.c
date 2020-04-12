@@ -318,7 +318,7 @@ int Menu_Main(void)
             OSScreenClearBufferEx(1, 0);
 
 
-            console_print_pos(0, 1, "-- Dumpling v0.2.0 by emiyl --");
+            console_print_pos(0, 1, "-- Dumpling v0.2.1 by emiyl --");
             console_print_pos(0, 2, "Mode: %s", (dump_source) ? "USB" : "MLC");
 
             console_print_pos(0, 4, "Select what to dump to SD card and press A to start dump.");
@@ -337,8 +337,6 @@ int Menu_Main(void)
                 }
             }
 
-            console_print_pos(0, 15, "Dumping may appear to hang sometimes, however this is normal.");
-            console_print_pos(0, 16, "Be patient and wait for it to finish.");
             // Flip buffers
             OSScreenFlipBuffersEx(0);
             OSScreenFlipBuffersEx(1);
