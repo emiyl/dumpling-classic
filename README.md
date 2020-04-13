@@ -14,7 +14,7 @@
 
 ## Installation
 
-Dumpling uses iosuhax and requires [MochaCFW](https://gbatemp.net/threads/mocha-cfw-the-sweet-chocolate-to-your-latte.452940/) to run, and won't work without it.
+Dumpling uses iosuhax and requires [MochaCFW](https://gbatemp.net/threads/mocha-cfw-the-sweet-chocolate-to-your-latte.452940/) to run, and won't work without it. You can probably use a fw.img with iosuhax as well, but I haven't tested that and it's easier to use Mocha.
 
 To install, simply download the dumpling `.elf` file from the [releases](https://github.com/emiyl/dumpling/releases/latest) page, and drag and drop it to the `/wiiu/apps` folder on your SD card.
 
@@ -26,7 +26,7 @@ To install, simply download the dumpling `.elf` file from the [releases](https:/
 - Dumps all digital games, updates and DLC on the system
 - Dumps all game saves on the system
 - Dumps the entire decrypted nand
-  - This can take up to 2 hours on a 32GB Wii U (only if the 32GB is fully used up)
+  - This can take up to 2 hours on a 32GB Wii U if all storage is used up
   
 ## To-do
 
