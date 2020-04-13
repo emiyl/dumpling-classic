@@ -60,7 +60,7 @@ static int DumpFile(char *pPath, const char * output_path)
     FILE *pWriteFile = fopen(output_path, "wb");
     if(!pWriteFile)
     {
-        if (detailed_logs) console_printf(1, "Can't open write file %s\n", output_path);
+        console_printf(1, "Can't open write file %s\n", output_path);
         fclose(pReadFile);
         return -3;
     }

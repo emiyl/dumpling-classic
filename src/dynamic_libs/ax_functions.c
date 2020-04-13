@@ -71,4 +71,3 @@ void InitAXFunctionPointers(void)
     OS_FIND_EXPORT(sound_handle, AXSetVoiceEndOffset);
     OS_FIND_EXPORT(sound_handle, AXSetVoiceLoopOffset);
 }
-

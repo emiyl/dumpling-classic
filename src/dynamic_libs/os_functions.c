@@ -24,19 +24,13 @@
 #include "common/common.h"
 #include "os_functions.h"
 
-unsigned int coreinit_handle __attribute__((section(".data"))) = 0;
+unsigned int coreinit_handle = 0;
 
 //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! Lib handle functions
 //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 EXPORT_DECL(int, OSDynLoad_Acquire, const char* rpl, u32 *handle);
 EXPORT_DECL(int, OSDynLoad_FindExport, u32 handle, int isdata, const char *symbol, void *address);
-
-//!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! Security functions
-//!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-EXPORT_DECL(int, OSGetSecurityLevel, void);
-EXPORT_DECL(int, OSForceFullRelaunch, void);
 
 //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! Thread functions
@@ -53,7 +47,6 @@ EXPORT_DECL(void, OSSleepTicks, u64 ticks);
 EXPORT_DECL(u64, OSGetTick, void);
 EXPORT_DECL(u64, OSGetTime, void);
 
-
 //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! Mutex functions
 //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -66,7 +59,6 @@ EXPORT_DECL(int, OSTryLockMutex, void* mutex);
 //! System functions
 //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 EXPORT_DECL(u64, OSGetTitleID, void);
-EXPORT_DECL(void, OSGetArgcArgv, int* argc, char*** argv);
 EXPORT_DECL(void, __Exit, void);
 EXPORT_DECL(void, OSFatal, const char* msg);
 EXPORT_DECL(void, OSSetExceptionCallback, u8 exceptionType, exception_callback newCallback);
@@ -74,7 +66,6 @@ EXPORT_DECL(void, DCFlushRange, const void *addr, u32 length);
 EXPORT_DECL(void, ICInvalidateRange, const void *addr, u32 length);
 EXPORT_DECL(void*, OSEffectiveToPhysical, const void*);
 EXPORT_DECL(int, __os_snprintf, char* s, int n, const char * format, ...);
-EXPORT_DECL(int *, __gh_errno_ptr, void);
 
 EXPORT_DECL(void, OSScreenInit, void);
 EXPORT_DECL(unsigned int, OSScreenGetBufferSizeEx, unsigned int bufferNum);
@@ -83,6 +74,11 @@ EXPORT_DECL(int, OSScreenClearBufferEx, unsigned int bufferNum, unsigned int tem
 EXPORT_DECL(int, OSScreenFlipBuffersEx, unsigned int bufferNum);
 EXPORT_DECL(int, OSScreenPutFontEx, unsigned int bufferNum, unsigned int posX, unsigned int posY, const char * buffer);
 EXPORT_DECL(int, OSScreenEnableEx, unsigned int bufferNum, int enable);
+
+EXPORT_DECL(int, IOS_Ioctl,int fd, unsigned int request, void *input_buffer,unsigned int input_buffer_len, void *output_buffer, unsigned int output_buffer_len);
+EXPORT_DECL(int, IOS_IoctlAsync,int fd, unsigned int request, void *input_buffer,unsigned int input_buffer_len, void *output_buffer, unsigned int output_buffer_len, void *cb, void *cbarg);
+EXPORT_DECL(int, IOS_Open,char *path, unsigned int mode);
+EXPORT_DECL(int, IOS_Close,int fd);
 
 //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! Memory functions
@@ -105,70 +101,34 @@ EXPORT_DECL(void, MEMFreeToExpHeap, int heap, void* ptr);
 //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 EXPORT_DECL(int, MCP_Open, void);
 EXPORT_DECL(int, MCP_Close, int handle);
-EXPORT_DECL(int, MCP_GetOwnTitleInfo, int handle, void * data);
 
 //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! Kernel function addresses
+//! Loader functions (not real rpl)
 //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-EXPORT_DECL(void, addr_PrepareTitle_hook, void);
+EXPORT_DECL(int, LiWaitIopComplete, int unknown_syscall_arg_r3, int * remaining_bytes);
+EXPORT_DECL(int, LiWaitIopCompleteWithInterrupts, int unknown_syscall_arg_r3, int * remaining_bytes);
 
-//!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! Other function addresses
-//!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-EXPORT_DECL(void, DCInvalidateRange, void *buffer, uint32_t length);
-
-//!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! Energy Saver functions
-//!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//Burn-in Reduction
-EXPORT_DECL(int, IMEnableDim,void);
-EXPORT_DECL(int, IMDisableDim,void);
-EXPORT_DECL(int, IMIsDimEnabled,int * result);
-//Auto power down
-EXPORT_DECL(int, IMEnableAPD,void);
-EXPORT_DECL(int, IMDisableAPD,void);
-EXPORT_DECL(int, IMIsAPDEnabled,int * result);
-EXPORT_DECL(int, IMIsAPDEnabledBySysSettings,int * result);
-
-
-EXPORT_DECL(int, IOS_Ioctl,int fd, unsigned int request, void *input_buffer,unsigned int input_buffer_len, void *output_buffer, unsigned int output_buffer_len);
-EXPORT_DECL(int, IOS_Open,char *path, unsigned int mode);
-EXPORT_DECL(int, IOS_Close,int fd);
-void InitAcquireOS(void)
+void InitOSFunctionPointers(void)
 {
-      //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    unsigned int *funcPointer = 0;
+    //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //! Lib handle functions
     //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     EXPORT_FUNC_WRITE(OSDynLoad_Acquire, (int (*)(const char*, unsigned *))OS_SPECIFICS->addr_OSDynLoad_Acquire);
     EXPORT_FUNC_WRITE(OSDynLoad_FindExport, (int (*)(u32, int, const char *, void *))OS_SPECIFICS->addr_OSDynLoad_FindExport);
 
     OSDynLoad_Acquire("coreinit.rpl", &coreinit_handle);
-}
 
-void InitOSFunctionPointers(void)
-{
-    unsigned int *funcPointer = 0;
-
-    InitAcquireOS();
-
-    //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //! Security functions
-    //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    OS_FIND_EXPORT(coreinit_handle, OSGetSecurityLevel);
-    OS_FIND_EXPORT(coreinit_handle, OSForceFullRelaunch);
     //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //! System functions
     //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     OS_FIND_EXPORT(coreinit_handle, OSFatal);
     OS_FIND_EXPORT(coreinit_handle, OSGetTitleID);
-    OS_FIND_EXPORT(coreinit_handle, OSGetArgcArgv);
     OS_FIND_EXPORT(coreinit_handle, OSSetExceptionCallback);
     OS_FIND_EXPORT(coreinit_handle, DCFlushRange);
     OS_FIND_EXPORT(coreinit_handle, ICInvalidateRange);
     OS_FIND_EXPORT(coreinit_handle, OSEffectiveToPhysical);
     OS_FIND_EXPORT(coreinit_handle, __os_snprintf);
-    OS_FIND_EXPORT(coreinit_handle, __gh_errno_ptr);
-
     OSDynLoad_FindExport(coreinit_handle, 0, "_Exit", &__Exit);
 
     OS_FIND_EXPORT(coreinit_handle, OSScreenInit);
@@ -192,7 +152,6 @@ void InitOSFunctionPointers(void)
     OS_FIND_EXPORT(coreinit_handle, OSSleepTicks);
     OS_FIND_EXPORT(coreinit_handle, OSGetTick);
     OS_FIND_EXPORT(coreinit_handle, OSGetTime);
-
     //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //! Mutex functions
     //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -205,7 +164,6 @@ void InitOSFunctionPointers(void)
     //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     OS_FIND_EXPORT(coreinit_handle, MCP_Open);
     OS_FIND_EXPORT(coreinit_handle, MCP_Close);
-    OS_FIND_EXPORT(coreinit_handle, MCP_GetOwnTitleInfo);
 
     //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //! Memory functions
@@ -226,22 +184,8 @@ void InitOSFunctionPointers(void)
     //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //! Other function addresses
     //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    OS_FIND_EXPORT(coreinit_handle, DCInvalidateRange);
-
-    //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //! Energy Saver functions
-    //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //Burn-in Reduction
-    OS_FIND_EXPORT(coreinit_handle, IMEnableDim);
-    OS_FIND_EXPORT(coreinit_handle, IMDisableDim);
-    OS_FIND_EXPORT(coreinit_handle, IMIsDimEnabled);
-    //Auto power down
-    OS_FIND_EXPORT(coreinit_handle, IMEnableAPD);
-    OS_FIND_EXPORT(coreinit_handle, IMDisableAPD);
-    OS_FIND_EXPORT(coreinit_handle, IMIsAPDEnabled);
-    OS_FIND_EXPORT(coreinit_handle, IMIsAPDEnabledBySysSettings);
-
     OS_FIND_EXPORT(coreinit_handle, IOS_Ioctl);
+	OS_FIND_EXPORT(coreinit_handle, IOS_IoctlAsync);
     OS_FIND_EXPORT(coreinit_handle, IOS_Open);
     OS_FIND_EXPORT(coreinit_handle, IOS_Close);
 }
