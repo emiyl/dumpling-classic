@@ -34,6 +34,7 @@ Dumpling also only supports dumping from internal storage and USB, but disk dump
 
 ## Credits
 
-- dimok789 for writing [ft2sd](https://github.com/dimok789/ft2sd/) which this application is based off of
+- dimok789 for [ft2sd](https://github.com/dimok789/ft2sd/)
+- dimok789 and FIX94 for [FTPiiU Everywhere](https://github.com/FIX94/ftpiiu/tree/ftpiiu_everywhere)
 - shepgoba for being good at C
-- chrissie and Crementif for helping me test USB dumping
+- chrissie and Crementif for testing
