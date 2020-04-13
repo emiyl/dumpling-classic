@@ -6,9 +6,7 @@
   <h3 align="center">Dumpling</h3>
 
   <p align="center">
-    A simple Wii U file dumper,
-    <br>developed with the intent of
-    making<br>Cemu set-up faster and easier.
+    A simple Wii U file dumper, developed with the intent of making Cemu set-up faster and easier.
   </p>
 </p>
 
