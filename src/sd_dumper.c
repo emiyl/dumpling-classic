@@ -28,8 +28,6 @@ int CheckCancel(void)
     return 0;
 }
 
-const bool detailed_logs = false;
-
 static int DumpFile(char *pPath, const char * output_path)
 {
     char *pSlash = strchr(pPath, '/');
@@ -52,8 +50,7 @@ static int DumpFile(char *pPath, const char * output_path)
     FILE *pReadFile = fopen(pPath, "rb");
     if(!pReadFile)
     {
-        if (detailed_logs) console_printf(1, "Can't open file %s\n", pPath);
-        if (!detailed_logs) console_printf(1, "Symlink file, skipping...\n", pPath);
+        console_printf(1, "Can't open file %s\n", pPath);
         return -2;
     }
 
@@ -88,7 +85,7 @@ static int DumpFile(char *pPath, const char * output_path)
     return 0;
 }
 
-int DumpDir(char *pPath, const char * target_path)
+int DumpDir(char *pPath, const char * target_path, int logs)
 {
     struct dirent *dirent = NULL;
     DIR *dir = NULL;
@@ -96,7 +93,9 @@ int DumpDir(char *pPath, const char * target_path)
     dir = opendir(pPath);
     if (dir == NULL)
     {
-        if (detailed_logs) console_printf(1, "Can't open %s\n", pPath);
+        if (logs) {
+          console_printf(1, "Can't open %s\n", pPath);
+        }
         return -1;
     }
 
@@ -140,7 +139,7 @@ int DumpDir(char *pPath, const char * target_path)
         {
             console_printf(1, "%s (%s)\n", dirent->d_name, pSlash);
 
-            DumpDir(pPath, target_path);
+            DumpDir(pPath, target_path, logs);
         }
         else
         {

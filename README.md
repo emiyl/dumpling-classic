@@ -21,20 +21,21 @@ To install, simply download the dumpling `.elf` file from the [releases](https:/
 - Dumps files needed for Cemu online play
   - You must dump `otp.bin` and `seeprom.bin` separately with [wiiu-nanddumper](https://github.com/koolkdev/wiiu-nanddumper)
 - Dumps the Friends List app for use in Cemu
+- Create region-free decrypted game disc dumps
 - Dumps all digital games, updates and DLC on the system
 - Dumps all game saves on the system
 - Dumps the entire decrypted nand
   - This can take up to 2 hours on a 32GB Wii U if all storage is used up
-  
+
 ## To-do
 
-Currently the software will dump _all_ games (or updates/DLC/saves) on internal storage. In a later update a feature will be added to only dump specific games.
-
-Dumpling also only supports dumping from internal storage and USB, but disk dumping will be coming
+1. Dump `otp.bin` and `seeprom.bin`
+2. Dump specific titles/updates/DLC
+3. Make it "Mocha-less"
 
 ## Credits
 
 - dimok789 for [ft2sd](https://github.com/dimok789/ft2sd/)
 - dimok789 and FIX94 for [FTPiiU Everywhere](https://github.com/FIX94/ftpiiu/tree/ftpiiu_everywhere)
-- shepgoba for being good at C
-- chrissie and Crementif for testing
+- shepgoba and rw-brick for being good at C
+- chrissie, Crementif and CrafterPika for testing

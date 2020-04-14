@@ -6,12 +6,12 @@
 #include <fat.h>
 #include "dynamic_libs/os_functions.h"
 #include "dynamic_libs/fs_functions.h"
-#include <dynamic_libs/gx2_functions.h>
-#include <dynamic_libs/sys_functions.h>
-#include <dynamic_libs/vpad_functions.h>
-#include <dynamic_libs/padscore_functions.h>
-#include <dynamic_libs/socket_functions.h>
-#include <dynamic_libs/ax_functions.h>
+#include "dynamic_libs/gx2_functions.h"
+#include "dynamic_libs/sys_functions.h"
+#include "dynamic_libs/vpad_functions.h"
+#include "dynamic_libs/padscore_functions.h"
+#include "dynamic_libs/socket_functions.h"
+#include "dynamic_libs/ax_functions.h"
 #include "fs/fs_utils.h"
 #include "fs/sd_fat_devoptab.h"
 #include <iosuhax.h>
@@ -115,91 +115,100 @@ void console_printf(int newline, const char *format, ...)
 	OSScreenFlipBuffersEx(1);
 }
 
-/*int CheckCancel(void)
+int dumpFunc(const char *path, int item, int dump_source, int dump_target, int logs)
 {
-    int vpadError = -1;
-    VPADData vpad;
+			int res = IOSUHAX_Open(NULL);
+	    if(res < 0)
+	    {
+	        console_printf(2, "IOSUHAX_open failed");
+	        console_printf(1, "Ensure you are using MochaCFW");
+	        sleep(2);
+	        return 0;
+	    }
 
-    //! update only at 50 Hz, thats more than enough
-    VPADRead(0, &vpad, 1, &vpadError);
+	    int fsaFd = IOSUHAX_FSA_Open();
+	    if(fsaFd < 0)
+	    {
+	        console_printf(2, "IOSUHAX_FSA_Open failed");
+	        console_printf(2, "Run MochaCFW again");
+	        sleep(2);
+	        return 0;
+	    }
 
-    if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_B))
-    {
-        return 1;
-    }
-    return 0;
-}*/
+			char *targetPath = (char*)malloc(FS_MAX_FULLPATH_SIZE);
+			if(targetPath)
+			{
+					fatInitDefault();
 
-int dump_func(const char *mount_path, int selectedItem, int fsaFd, int initScreen, int dump_source, int dump_target)
-{
-		int res = mount_fs("dev", fsaFd, NULL, mount_path);
-		if(res < 0)
-		{
-				console_printf(1, "Mount of %s to %s failed", NULL, mount_path);
-		}
-		else
-		{
-				char *targetPath = (char*)malloc(FS_MAX_FULLPATH_SIZE);
-				if(targetPath)
-				{
-						strcpy(targetPath, "dev:/");
-						char sdPath[255] = "sd:/dumpling";
-						char dumpTo[127] = "dumps";
-						if (!dump_source && (selectedItem == 0)) snprintf(dumpTo, sizeof(dumpTo), "online_files/%s", mount_path + 13);
-						if (!dump_source && (selectedItem == 1)) strcpy(dumpTo, "friends_list");
-						if ((!dump_source && (selectedItem == 2)) | (dump_source && (selectedItem == 0))) strcpy(dumpTo, "games");
-						if ((!dump_source && (selectedItem == 3)) | (dump_source && (selectedItem == 1))) strcpy(dumpTo, "updates");
-						if ((!dump_source && (selectedItem == 4)) | (dump_source && (selectedItem == 2))) strcpy(dumpTo, "dlc");
-						if ((!dump_source && (selectedItem == 5)) | (dump_source && (selectedItem == 3))) strcpy(dumpTo, "saves");
-						if (!dump_source && (selectedItem == 6)) strcpy(dumpTo, "nand");
-						snprintf(sdPath, sizeof(sdPath), "%s:/dumpling/%s",  (dump_target) ? "usb" : "sd", dumpTo);
-						DumpDir(targetPath, sdPath);
+					const char *dev_path = (!dump_source && (item == 2)) ? "/dev/odd03" : NULL;
 
-						free(targetPath);
-				}
-				unmount_fs("dev");
-				if (selectedItem != 1) console_printf(1, "Dump complete");
-		}
-		if (selectedItem != 1) sleep(1);
-		initScreen = 1;
-		return initScreen;
-}
+					char mount_path[255];
+					if (!dump_source && (item == 2)) strcpy(mount_path, "/vol/storage_odd_content");
+					else if (dump_source) snprintf(mount_path, sizeof(mount_path), "/vol/storage_usb01%s", strchr(path, '/'));
+					else snprintf(mount_path, sizeof(mount_path), "/vol/storage_mlc01%s", strchr(path, '/'));
 
-//just to be able to call async
-void someFunc(void *arg)
-{
-    (void)arg;
-}
+					int res = mount_fs("dev", fsaFd, dev_path, mount_path);
+					if(res < 0)
+					{
+							console_printf(1, "Mount of %s to %s failed", dev_path, mount_path);
+		          console_printf(2, "Ensure the drive is connected.");
+		          console_printf(1, "Press X to return.");
 
-static int mcp_hook_fd = -1;
-int MCPHookOpen()
-{
-    //take over mcp thread
-    mcp_hook_fd = MCP_Open();
-    if(mcp_hook_fd < 0)
-        return -1;
-    IOS_IoctlAsync(mcp_hook_fd, 0x62, (void*)0, 0, (void*)0, 0, someFunc, (void*)0);
-    //let wupserver start up
-    sleep(1);
-    if(IOSUHAX_Open("/dev/mcp") < 0)
-    {
-        MCP_Close(mcp_hook_fd);
-        mcp_hook_fd = -1;
-        return -1;
-    }
-    return 0;
-}
+		          InitVPadFunctionPointers();
+		          VPADInit();
+		          int vpadError = -1;
+		          VPADData vpad;
+		          usleep(150000);
 
-void MCPHookClose()
-{
-    if(mcp_hook_fd < 0)
-        return;
-    //close down wupserver, return control to mcp
-    IOSUHAX_Close();
-    //wait for mcp to return
-    sleep(1);
-    MCP_Close(mcp_hook_fd);
-    mcp_hook_fd = -1;
+		          for(;;) {
+		            VPADRead(0, &vpad, 1, &vpadError);
+		            if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_X))
+		            {
+		                break;
+		            }
+		            usleep(50000);
+		          }
+							return 0;
+					}
+
+					VirtualMountDevice("dev:/");
+					VirtualMountDevice("sd:/");
+					VirtualMountDevice("usb:/");
+
+					char toDrive[127] =  "sd";
+					char toDir[255] = "sd:/dumpling/not_set/";
+					strcpy(targetPath, "dev:/");
+					if (dump_target) strcpy(toDrive, "usb");
+					if (!dump_source && (item == 0)) snprintf(toDir, sizeof(toDir), "%s:/dumpling/online_files/mlc01/%s", toDrive, path + 13);
+					if (!dump_source && (item == 1)) snprintf(toDir, sizeof(toDir), "%s:/dumpling/friends_list/", toDrive);
+					if (!dump_source && (item == 2)) snprintf(toDir, sizeof(toDir), "%s:/dumpling/disc", toDrive);
+					if ((dump_source) ? (item == 0) : (item == 3)) snprintf(toDir, sizeof(toDir), "%s:/dumpling/games/", toDrive);
+					if ((dump_source) ? (item == 1) : (item == 4)) snprintf(toDir, sizeof(toDir), "%s:/dumpling/updates/", toDrive);
+					if ((dump_source) ? (item == 2) : (item == 5)) snprintf(toDir, sizeof(toDir), "%s:/dumpling/dlc/", toDrive);
+					if ((dump_source) ? (item == 3) : (item == 6)) snprintf(toDir, sizeof(toDir), "%s:/dumpling/saves/", toDrive);
+					if (!dump_source && (item == 7)) snprintf(toDir, sizeof(toDir), "%s:/dumpling/nand/", toDrive);
+
+					DumpDir(targetPath, toDir, logs);
+					free(targetPath);
+			}
+
+			if (dump_source | (item != 1)) {
+				console_printf(1, "Dump complete");
+				usleep(500000);
+			}
+
+			fatUnmount("sd");
+			fatUnmount("usb");
+			IOSUHAX_sdio_disc_interface.shutdown();
+			IOSUHAX_usb_disc_interface.shutdown();
+
+			unmount_fs("dev");
+			UnmountVirtualPaths();
+
+			IOSUHAX_FSA_Close(fsaFd);
+			IOSUHAX_Close();
+
+			return 1;
 }
 
 /* Entry point */
@@ -226,12 +235,6 @@ int Menu_Main(void)
     log_print("Initialize memory management\n");
     //! We don't need bucket and MEM1 memory so no need to initialize
     //memoryInitialize();
-
-    //!*******************************************************************
-    //!                        Initialize FS                             *
-    //!*******************************************************************
-    log_printf("Mount SD partition\n");
-    mount_sd_fat("sd");
 
 	for(int i = 0; i < MAX_CONSOLE_LINES_TV; i++)
         consoleArrayTv[i] = NULL;
@@ -261,97 +264,75 @@ int Menu_Main(void)
     OSScreenFlipBuffersEx(0);
     OSScreenFlipBuffersEx(1);
 
-		int fsaFd = -1;
-		int iosuhaxMount = 0;
-
-		int res = IOSUHAX_Open(NULL);
-		if(res < 0)
-				res = MCPHookOpen();
-		if(res < 0)
-		{
-				log_printf("IOSUHAX_open failed\nEnsure you are using MochaCFW\n");
-        sleep(2);
-				return 0;
-		}
-		else
-		{
-				iosuhaxMount = 1;
-				fatInitDefault();
-
-				fsaFd = IOSUHAX_FSA_Open();
-				if(fsaFd < 0)
-				{
-						log_printf("IOSUHAX_FSA_Open failed\n");
-				}
-
-				//mount_fs("slccmpt01", fsaFd, "/dev/slccmpt01", "/vol/storage_slccmpt01");
-				//mount_fs("storage_odd_tickets", fsaFd, "/dev/odd01", "/vol/storage_odd_tickets");
-				//mount_fs("storage_odd_updates", fsaFd, "/dev/odd02", "/vol/storage_odd_updates");
-				//mount_fs("storage_odd_content", fsaFd, "/dev/odd03", "/vol/storage_odd_content");
-				//mount_fs("storage_odd_content2", fsaFd, "/dev/odd04", "/vol/storage_odd_content2");
-				//mount_fs("storage_slc", fsaFd, NULL, "/vol/system");
-				//mount_fs("storage_mlc", fsaFd, NULL, "/vol/storage_mlc01");
-				//mount_fs("storage_usb", fsaFd, NULL, "/vol/storage_usb01");
-
-				VirtualMountDevice("sd:/");
-				//VirtualMountDevice("slccmpt01:/");
-				//VirtualMountDevice("storage_odd_tickets:/");
-				//VirtualMountDevice("storage_odd_updates:/");
-				//VirtualMountDevice("storage_odd_content:/");
-				//VirtualMountDevice("storage_odd_content2:/");
-				//VirtualMountDevice("storage_slc:/");
-				//VirtualMountDevice("storage_mlc:/");
-				//VirtualMountDevice("storage_usb:/");
-				VirtualMountDevice("usb:/");
-		}
-
     int vpadError = -1;
     VPADData vpad;
 
     int initScreen = 1;
 
-    static const char* mlc_paths_output[] =
+    static const char* mlc_selection_text[] =
     {
-				"Online Files",
+        "Online Files",
         "Friends List",
+        "Disc dump",
         "All digital games",
         "All digital updates",
         "All digital DLC",
-        "All save data",
-        "Full MLC01 (Very long time!)",
-    };
-
-    static const char* usb_paths_output[] =
-    {
-        "All digital games",
-        "All digital updates",
-        "All digital DLC",
-        "All save data",
+        "All saves data",
+        "Full MLC01",
     };
 
     static const char* mlc_selection_paths[] =
     {
-				NULL,
         NULL,
-        "/vol/storage_mlc01/usr/title/00050000/", // digital games directory
-        "/vol/storage_mlc01/usr/title/0005000E/", // updates directory
-        "/vol/storage_mlc01/usr/title/0005000C/", // DLC directory
-        "/vol/storage_mlc01/usr/save/00050000/", // save data directory
-        "/vol/storage_mlc01/", // nand directory
+        NULL,
+        "storage_odd_content:/",
+        "storage_mlc:/usr/title/00050000",
+        "storage_mlc:/usr/title/0005000E",
+        "storage_mlc:/usr/title/0005000C",
+        "storage_mlc:/usr/save/00050000",
+        "storage_mlc:/",
+    };
+
+    static const char* usb_selection_text[] =
+    {
+        "All digital games",
+        "All digital updates",
+        "All digital DLC",
+        "All saves data",
     };
 
     static const char* usb_selection_paths[] =
     {
-        "/vol/storage_usb01/usr/title/00050000/", // digital games directory
-        "/vol/storage_usb01/usr/title/0005000E/", // updates directory
-        "/vol/storage_usb01/usr/title/0005000C/", // DLC directory
-        "/vol/storage_usb01/usr/save/00050000/", // save data directory
+        "storage_usb:/usr/title/00050000",
+        "storage_usb:/usr/title/0005000E",
+        "storage_usb:/usr/title/0005000C",
+        "storage_usb:/usr/save/00050000",
+    };
+
+    static const char* online_files_paths[] =
+    {
+			"storage_mlc:/usr/save/system/act",
+			"storage_mlc:/sys/title/0005001b/10054000/",
+			"storage_mlc:/sys/title/0005001b/10056000",
+    };
+
+    static const char* friends_list_paths[] =
+    {
+			"storage_mlc:/sys/title/00050030/1001500A",
+			"storage_mlc:/sys/title/00050030/1001510A",
+			"storage_mlc:/sys/title/00050030/1001520A",
     };
 
     int selectedItem = 0;
-
 		int dump_source = 0;
 		int dump_target = 0;
+
+		int checkBox[(((dump_source) ? sizeof(usb_selection_text) : sizeof(mlc_selection_text)) / 4)];
+
+		u32 i;
+		for(i = 0; i < (((dump_source) ? sizeof(usb_selection_text) : sizeof(mlc_selection_text)) / 4); i++) {
+			checkBox[i] = 0;
+		}
 
     while(1)
     {
@@ -382,23 +363,21 @@ int Menu_Main(void)
             OSScreenClearBufferEx(1, 0);
 
 
-            console_print_pos(0, 1, "-- Dumpling v0.3.0 by emiyl --");
-            console_print_pos(0, 2, "Source: %s // Target: %s", (dump_source) ? "USB" : "MLC", (dump_target) ? "USB" : "SD");
+            console_print_pos(0, 1, "-- dumpling v0.4 by emiyl --");
+            console_print_pos(0, 2, "Source: %s // Target: %s", (dump_source) ? "USB" : "System", (dump_target) ? "USB" : "SD");
 
-            console_print_pos(0, 4, "Select what to dump to USB storage and press A to start dump.");
+            console_print_pos(0, 4, "Press A to select and START to begin dumping.");
             console_print_pos(0, 5, "Use L/R to change source and ZL/ZR to change target.");
 
             u32 i;
-						for(i = 0; i < (((dump_source) ? sizeof(usb_selection_paths) : sizeof(mlc_selection_paths)) / 4); i++)
+
+            for(i = 0; i < (((dump_source) ? sizeof(usb_selection_text) : sizeof(mlc_selection_text)) / 4); i++)
             {
-                if(selectedItem == (int)i)
-                {
-                    console_print_pos(0, 7 + i, "--> %s", ((dump_source) ? usb_paths_output : mlc_paths_output)[i]); //, selection_paths_description[i]);
-                }
-                else
-                {
-                    console_print_pos(0, 7 + i, "    %s", ((dump_source) ? usb_paths_output : mlc_paths_output)[i]); //, selection_paths_description[i]);
-                }
+								if (checkBox[i]) console_print_pos(0, 7 + i, "[x]");
+								else console_print_pos(0, 7 + i, "[ ]");
+
+                if (selectedItem == (int)i) console_print_pos(4, 7 + i, "> %s", (dump_source) ? usb_selection_text[i] : mlc_selection_text[i]);
+                else console_print_pos(4, 7 + i, "  %s", (dump_source) ? usb_selection_text[i] : mlc_selection_text[i]);
             }
 
             console_print_pos(0, 16, "Hold B to cancel dumping.");
@@ -410,66 +389,63 @@ int Menu_Main(void)
 
         if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_DOWN))
         {
-            selectedItem = (selectedItem + 1) % (((dump_source) ? sizeof(usb_selection_paths) : sizeof(mlc_selection_paths)) / 4);
+            selectedItem = (selectedItem + 1) % (((dump_source) ? sizeof(usb_selection_text) : sizeof(mlc_selection_text)) / 4);
             initScreen = 1;
-            usleep(200000);
+            usleep(150000);
         }
 
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_UP))
-        {
-            selectedItem--;
-            if(selectedItem < 0)
-                selectedItem =  (((dump_source) ? sizeof(usb_selection_paths) : sizeof(mlc_selection_paths)) / 4) - 1;
-            initScreen = 1;
-            usleep(200000);
-        }
+				if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_UP))
+				{
+						selectedItem--;
+						if(selectedItem < 0)
+								selectedItem =  (((dump_source) ? sizeof(usb_selection_text) : sizeof(mlc_selection_text)) / 4) - 1;
+						initScreen = 1;
+						usleep(150000);
+				}
 
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & (VPAD_BUTTON_L)))
+        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & (VPAD_BUTTON_R | VPAD_BUTTON_RIGHT | VPAD_BUTTON_L | VPAD_BUTTON_LEFT)))
         {
+						u32 i;
+						for(i = 0; i < (((dump_source) ? sizeof(usb_selection_text) : sizeof(mlc_selection_text)) / 4); i++) {
+							checkBox[i] = 0;
+						}
             dump_source = !dump_source;
-						selectedItem = 0;
+						if (selectedItem > 4)
+							selectedItem = 3;
             initScreen = 1;
-            usleep(200000);
+            usleep(150000);
         }
 
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & (VPAD_BUTTON_R)))
-        {
-            dump_source = !dump_source;
-						selectedItem = 0;
-            initScreen = 1;
-            usleep(200000);
-        }
-
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & (VPAD_BUTTON_ZL)))
+        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & (VPAD_BUTTON_ZR | VPAD_BUTTON_ZL)))
         {
             dump_target = !dump_target;
             initScreen = 1;
-            usleep(200000);
-        }
-
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & (VPAD_BUTTON_ZR)))
-        {
-            dump_target = !dump_target;
-            initScreen = 1;
-            usleep(200000);
+            usleep(150000);
         }
 
         if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_A))
         {
-						if (dump_source | (selectedItem > 1))
-							initScreen = dump_func(((dump_source) ? usb_selection_paths : mlc_selection_paths)[selectedItem], selectedItem, fsaFd, initScreen, dump_source, dump_target);
-						else if (selectedItem == 0) {
-							initScreen = dump_func("/vol/storage_mlc01/usr/save/system/act/"											, selectedItem, fsaFd, initScreen, dump_source, dump_target); // account.dat
-							initScreen = dump_func("/vol/storage_mlc01/sys/title/0005001b/10054000/content/ccerts", selectedItem, fsaFd, initScreen, dump_source, dump_target); // ccerts
-							initScreen = dump_func("/vol/storage_mlc01/sys/title/0005001b/10054000/content/scerts", selectedItem, fsaFd, initScreen, dump_source, dump_target); // scerts
-							initScreen = dump_func("/vol/storage_mlc01/sys/title/0005001b/10056000/"							, selectedItem, fsaFd, initScreen, dump_source, dump_target); // mii data
-						}
-						else if (selectedItem == 1) {
-							initScreen = dump_func("/vol/storage_mlc01/sys/title/00050030/1001500A/", selectedItem, fsaFd, initScreen, dump_source, dump_target); // JP friends list
-							initScreen = dump_func("/vol/storage_mlc01/sys/title/00050030/1001510A/", selectedItem, fsaFd, initScreen, dump_source, dump_target); // US friends list
-							initScreen = dump_func("/vol/storage_mlc01/sys/title/00050030/1001520A/", selectedItem, fsaFd, initScreen, dump_source, dump_target); // EU friends list
-							console_printf(1, "Dump complete");
-							sleep(1);
+						checkBox[selectedItem] = !checkBox[selectedItem];
+						initScreen = 1;
+            usleep(150000);
+        }
+
+        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_PLUS))
+        {
+						u32 i, j;
+						for(i = 0; i < (((dump_source) ? sizeof(usb_selection_text) : sizeof(mlc_selection_text)) / 4); i++)
+						{
+								if (checkBox[i]) {
+										if (!dump_source && (i < 2)) {
+												if (i == 0) for (j=0;j<sizeof(online_files_paths)/4;j++) dumpFunc(online_files_paths[j], i, dump_source, dump_target, 1);
+												if (i == 1) {
+													for (j=0;j<sizeof(friends_list_paths)/4;j++) {dumpFunc(friends_list_paths[j], i, dump_source, dump_target, 0);}
+													console_printf(1, "Dump complete");
+													usleep(500000);
+												}
+										} else dumpFunc((dump_source) ? usb_selection_paths[i] : mlc_selection_paths[i], i, dump_source, dump_target, 1);
+								}
+								initScreen = 1;
 						}
         }
 
@@ -493,42 +469,6 @@ int Menu_Main(void)
         if(consoleArrayDrc[i])
             free(consoleArrayDrc[i]);
     }
-
-    //!*******************************************************************
-    //!                    Enter main application                        *
-    //!*******************************************************************
-
-    log_printf("Unmount SD\n");
-		if(iosuhaxMount)
-		{
-				fatUnmount("sd");
-				fatUnmount("usb");
-				IOSUHAX_sdio_disc_interface.shutdown();
-				IOSUHAX_usb_disc_interface.shutdown();
-
-				/*unmount_fs("slccmpt01");
-				unmount_fs("storage_odd_tickets");
-				unmount_fs("storage_odd_updates");
-				unmount_fs("storage_odd_content");
-				unmount_fs("storage_odd_content2");
-				unmount_fs("storage_slc");
-				unmount_fs("storage_mlc");
-				unmount_fs("storage_usb");*/
-				IOSUHAX_FSA_Close(fsaFd);
-				if(mcp_hook_fd >= 0)
-						MCPHookClose();
-				else
-						IOSUHAX_Close();
-		}
-		else
-		{
-				unmount_sd_fat("sd:/");
-		}
-
-		UnmountVirtualPaths();
-
-    IOSUHAX_FSA_Close(fsaFd);
-    IOSUHAX_Close();
 
     log_printf("Release memory\n");
     //memoryRelease();
