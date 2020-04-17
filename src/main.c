@@ -822,21 +822,6 @@ int titles_menu(int dump_source, int dump_target) {
 
 	usleep(50000);
 	}
-
-	//! free memory
-	for(int i = 0; i < MAX_CONSOLE_LINES_TV; i++)
-	{
-			if(consoleArrayTv[i])
-					free(consoleArrayTv[i]);
-	}
-
-	for(int i = 0; i < MAX_CONSOLE_LINES_DRC; i++)
-	{
-			if(consoleArrayDrc[i])
-					free(consoleArrayDrc[i]);
-	}
-
-	log_deinit();
 }
 
 /* Entry point */
