@@ -336,7 +336,7 @@ char **mlc_stored_folders = NULL;
 char **usb_meta_names = NULL;;
 char **usb_stored_folders = NULL;;
 
-const char head_string[50] = "-- dumpling v1.0 pre-release by emiyl --";
+const char head_string[50] = "-- dumpling v1.0 by emiyl --";
 
 int titles_menu(int dump_source, int dump_target) {
 	InitOSFunctionPointers();
