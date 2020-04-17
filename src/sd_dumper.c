@@ -85,7 +85,7 @@ static int DumpFile(char *pPath, const char * output_path)
     return 0;
 }
 
-int DumpDir(char *pPath, const char * target_path, int logs)
+int DumpDir(char *pPath, const char * target_path)
 {
     struct dirent *dirent = NULL;
     DIR *dir = NULL;
@@ -93,9 +93,7 @@ int DumpDir(char *pPath, const char * target_path, int logs)
     dir = opendir(pPath);
     if (dir == NULL)
     {
-        if (logs) {
-          console_printf(1, "Can't open %s\n", pPath);
-        }
+        console_printf(1, "Can't open %s\n", pPath);
         return -1;
     }
 
@@ -139,7 +137,7 @@ int DumpDir(char *pPath, const char * target_path, int logs)
         {
             console_printf(1, "%s (%s)\n", dirent->d_name, pSlash);
 
-            DumpDir(pPath, target_path, logs);
+            DumpDir(pPath, target_path);
         }
         else
         {

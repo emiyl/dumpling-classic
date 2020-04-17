@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-int DumpDir(char *pPath, const char * target_path, int logs);
+int DumpDir(char *pPath, const char * target_path);
 
 #ifdef __cplusplus
 }
