@@ -336,7 +336,7 @@ char **mlc_stored_folders = NULL;
 char **usb_meta_names = NULL;;
 char **usb_stored_folders = NULL;;
 
-const char head_string[50] = "-- dumpling v1.0 by emiyl --";
+const char head_string[50] = "-- dumpling v1.0.1 by emiyl --";
 
 int titles_menu(int dump_source, int dump_target) {
 	InitOSFunctionPointers();
@@ -1027,7 +1027,7 @@ int Menu_Main(void)
 					console_print_pos(4, 7 + i, "  %s", (dump_source) ? usb_selection_text[i] : mlc_selection_text[i]);
             }
 
-            console_print_pos(0, 16, "Hold B to cancel. Press X to dump invidual titles.");
+            console_print_pos(0, 16, "Hold B to cancel. Press X to dump individual titles.");
 
             // Flip buffers
             OSScreenFlipBuffersEx(0);
