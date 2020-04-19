@@ -26,6 +26,7 @@
 #include "common/common.h"
 #include "sd_dumper.h"
 #include "virtualpath.h"
+#include "utils/padutils.h"
 
 #define MAX_CONSOLE_LINES_TV    27
 #define MAX_CONSOLE_LINES_DRC   18
@@ -167,15 +168,11 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 				console_printf(2, "Ensure the drive is connected.");
 				console_printf(1, "Press B to return.");
 
-				InitVPadFunctionPointers();
-				VPADInit();
-				int vpadError = -1;
-				VPADData vpad;
 				usleep(150000);
 
 				for(;;) {
-					VPADRead(0, &vpad, 1, &vpadError);
-					if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_B))
+					updatePad();
+					if(isPressed(VPAD_BUTTON_B) || isHeld(VPAD_BUTTON_B))
 						break;
 					usleep(50000);
 				}
@@ -202,15 +199,11 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 				console_printf(2, "Ensure the drive is connected.");
 				console_printf(1, "Press B to return.");
 
-				InitVPadFunctionPointers();
-				VPADInit();
-				int vpadError = -1;
-				VPADData vpad;
 				usleep(150000);
 
 				for(;;) {
-					VPADRead(0, &vpad, 1, &vpadError);
-					if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_B))
+					updatePad();
+					if(isPressed(VPAD_BUTTON_B) || isHeld(VPAD_BUTTON_B))
 						break;
 					usleep(50000);
 				}
@@ -236,15 +229,11 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 			console_printf(2, "Ensure the drive is connected.");
 			console_printf(1, "Press B to return.");
 
-			InitVPadFunctionPointers();
-			VPADInit();
-			int vpadError = -1;
-			VPADData vpad;
 			usleep(150000);
 
 			for(;;) {
-				VPADRead(0, &vpad, 1, &vpadError);
-				if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_B))
+				updatePad();
+				if(isPressed(VPAD_BUTTON_B) || isHeld(VPAD_BUTTON_B))
 					break;
 				usleep(50000);
 			}
@@ -269,15 +258,11 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 			console_printf(2, "Ensure the drive is connected.");
 			console_printf(1, "Press B to return.");
 
-			InitVPadFunctionPointers();
-			VPADInit();
-			int vpadError = -1;
-			VPADData vpad;
 			usleep(150000);
 
 			for(;;) {
-				VPADRead(0, &vpad, 1, &vpadError);
-				if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_B))
+				updatePad();
+				if(isPressed(VPAD_BUTTON_B) || isHeld(VPAD_BUTTON_B))
 					break;
 				usleep(50000);
 			}
@@ -339,22 +324,11 @@ char **usb_stored_folders = NULL;;
 const char head_string[50] = "-- dumpling v1.0.1 by emiyl --";
 
 int titles_menu(int dump_source, int dump_target) {
-	InitOSFunctionPointers();
-	InitSocketFunctionPointers();
-
-	InitFSFunctionPointers();
-	InitVPadFunctionPointers();
-
 	for(int i = 0; i < MAX_CONSOLE_LINES_TV; i++)
 		consoleArrayTv[i] = NULL;
 
 	for(int i = 0; i < MAX_CONSOLE_LINES_DRC; i++)
 		consoleArrayDrc[i] = NULL;
-
-	VPADInit();
-
-	int vpadError = -1;
-	VPADData vpad;
 
 	int res = IOSUHAX_Open(NULL);
 	if(res < 0)
@@ -611,7 +585,7 @@ int titles_menu(int dump_source, int dump_target) {
 
 	while(1)
 	{
-		VPADRead(0, &vpad, 1, &vpadError);
+		updatePad();
 
 		if (mlc_only)
 			dump_source = 0;
@@ -690,7 +664,7 @@ int titles_menu(int dump_source, int dump_target) {
 			OSScreenFlipBuffersEx(1);
 		}
 
-		if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_DOWN))
+		if(isPressed(VPAD_BUTTON_DOWN) || isHeld(VPAD_BUTTON_DOWN))
 		{
 			// if item is the last entry on page
 			if (selectedItem % 8 == 7)
@@ -707,7 +681,7 @@ int titles_menu(int dump_source, int dump_target) {
 			usleep(150000);
 		}
 
-		if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_UP))
+		if(isPressed(VPAD_BUTTON_UP) || isHeld(VPAD_BUTTON_UP))
 		{
 			if (selectedItem % 8 == 0)
 				page_number--;
@@ -716,7 +690,7 @@ int titles_menu(int dump_source, int dump_target) {
 			usleep(150000);
 		}
 
-		if(!mlc_only && vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & (VPAD_BUTTON_R | VPAD_BUTTON_L)))
+		if(isPressed(VPAD_BUTTON_L) || isHeld(VPAD_BUTTON_L) || isPressed(VPAD_BUTTON_R) || isHeld(VPAD_BUTTON_R))
 		{
 			u32 i;
 			for(i = 0; i < ((dump_source) ? usb_folder_string_count : mlc_folder_string_count); i++) {
@@ -731,7 +705,7 @@ int titles_menu(int dump_source, int dump_target) {
 			usleep(150000);
 		}
 
-		if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & (VPAD_BUTTON_LEFT)))
+		if(isPressed(VPAD_BUTTON_LEFT) || isHeld(VPAD_BUTTON_LEFT))
 		{
 			int string_count = (dump_source) ? usb_folder_string_count : mlc_folder_string_count;
 			if (selectedItem < 8)
@@ -747,7 +721,7 @@ int titles_menu(int dump_source, int dump_target) {
 			usleep(150000);
 		}
 
-		if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & (VPAD_BUTTON_RIGHT)))
+		if(isPressed(VPAD_BUTTON_RIGHT) || isHeld(VPAD_BUTTON_RIGHT))
 		{
 			int string_count = (dump_source) ? usb_folder_string_count : mlc_folder_string_count;
 			if (selectedItem + 8 > string_count - 1)
@@ -759,14 +733,14 @@ int titles_menu(int dump_source, int dump_target) {
 			usleep(150000);
 		}
 
-		if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & (VPAD_BUTTON_ZR | VPAD_BUTTON_ZL)))
+		if(isPressed(VPAD_BUTTON_ZL) || isHeld(VPAD_BUTTON_ZL) || isPressed(VPAD_BUTTON_ZR) || isHeld(VPAD_BUTTON_ZR))
 		{
 			dump_target = !dump_target;
 			initScreen = 1;
 			usleep(150000);
 		}
 
-		if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_A))
+		if(isPressed(VPAD_BUTTON_A) || isHeld(VPAD_BUTTON_A))
 		{
 			if (dump_source)
 				usb_checkBox[selectedItem] = !usb_checkBox[selectedItem];
@@ -776,13 +750,13 @@ int titles_menu(int dump_source, int dump_target) {
 			usleep(150000);
 		}
 
-		if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_X))
+		if(isPressed(VPAD_BUTTON_X) || isHeld(VPAD_BUTTON_X))
 		{
 			return 1;
 			usleep(150000);
 		}
 
-		if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_PLUS))
+		if(isPressed(VPAD_BUTTON_PLUS) || isHeld(VPAD_BUTTON_PLUS))
 		{
 			for(u32 i = 0; i < ((dump_source) ? usb_folder_string_count : mlc_folder_string_count); i++)
 			{
@@ -814,7 +788,7 @@ int titles_menu(int dump_source, int dump_target) {
 			}
 		}
 
-		if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_HOME))
+		if(isPressed(VPAD_BUTTON_HOME) || isHeld(VPAD_BUTTON_HOME))
 		{
 			loop = 0;
 			return 1;
@@ -831,7 +805,6 @@ int Menu_Main(void)
     InitSocketFunctionPointers();
 
     InitFSFunctionPointers();
-    InitVPadFunctionPointers();
 
 	for(int i = 0; i < MAX_CONSOLE_LINES_TV; i++)
         consoleArrayTv[i] = NULL;
@@ -839,7 +812,7 @@ int Menu_Main(void)
 	for(int i = 0; i < MAX_CONSOLE_LINES_DRC; i++)
         consoleArrayDrc[i] = NULL;
 
-    VPADInit();
+    padInit();
 
     // Prepare screen
     int screen_buf0_size = 0;
@@ -860,9 +833,6 @@ int Menu_Main(void)
     // Flip buffers
     OSScreenFlipBuffersEx(0);
     OSScreenFlipBuffersEx(1);
-
-    int vpadError = -1;
-    VPADData vpad;
 
     int initScreen = 1;
 	int mlc_only = 0;
@@ -975,7 +945,7 @@ int Menu_Main(void)
 
     while(loop)
     {
-        VPADRead(0, &vpad, 1, &vpadError);
+        updatePad();
 
 		if (mlc_only)
 			dump_source = 0;
@@ -1034,14 +1004,14 @@ int Menu_Main(void)
             OSScreenFlipBuffersEx(1);
         }
 
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_DOWN))
+        if(isPressed(VPAD_BUTTON_DOWN) || isHeld(VPAD_BUTTON_DOWN))
         {
             selectedItem = (selectedItem + 1) % (((dump_source) ? sizeof(usb_selection_text) : sizeof(mlc_selection_text)) / 4);
             initScreen = 1;
             usleep(150000);
         }
 
-		if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_UP))
+		if(isPressed(VPAD_BUTTON_UP) || isHeld(VPAD_BUTTON_UP))
 		{
 			selectedItem--;
 			if(selectedItem < 0)
@@ -1050,7 +1020,7 @@ int Menu_Main(void)
 			usleep(150000);
 		}
 
-        if(!mlc_only && vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & (VPAD_BUTTON_R | VPAD_BUTTON_RIGHT | VPAD_BUTTON_L | VPAD_BUTTON_LEFT)))
+        if(!mlc_only && (isPressed(VPAD_BUTTON_R) || isHeld(VPAD_BUTTON_R) || isPressed(VPAD_BUTTON_RIGHT) || isHeld(VPAD_BUTTON_RIGHT) || isPressed(VPAD_BUTTON_L) || isHeld(VPAD_BUTTON_L) || isPressed(VPAD_BUTTON_LEFT) || isHeld(VPAD_BUTTON_LEFT)))
         {
 			u32 i;
 			for(i = 0; i < (((dump_source) ? sizeof(usb_selection_text) : sizeof(mlc_selection_text)) / 4); i++) {
@@ -1063,21 +1033,21 @@ int Menu_Main(void)
             usleep(150000);
         }
 
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & (VPAD_BUTTON_ZR | VPAD_BUTTON_ZL)))
+        if(isPressed(VPAD_BUTTON_ZR) || isHeld(VPAD_BUTTON_ZR) || isPressed(VPAD_BUTTON_ZL) || isHeld(VPAD_BUTTON_ZL))
         {
             dump_target = !dump_target;
             initScreen = 1;
             usleep(150000);
         }
 
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_A))
+        if(isPressed(VPAD_BUTTON_A) || isHeld(VPAD_BUTTON_A))
         {
 			checkBox[selectedItem] = !checkBox[selectedItem];
 			initScreen = 1;
             usleep(150000);
         }
 
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_X))
+        if(isPressed(VPAD_BUTTON_X) || isHeld(VPAD_BUTTON_X))
         {
 			usleep(150000);
 			titles_menu(dump_source, dump_target);
@@ -1085,7 +1055,7 @@ int Menu_Main(void)
 			usleep(150000);
         }
 
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_PLUS))
+        if(isPressed(VPAD_BUTTON_PLUS) || isHeld(VPAD_BUTTON_PLUS))
         {
 			u32 i, j;
 			for(i = 0; i < (((dump_source) ? sizeof(usb_selection_text) : sizeof(mlc_selection_text)) / 4); i++)
@@ -1145,7 +1115,7 @@ int Menu_Main(void)
 			}
         }
 
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_HOME))
+        if(isPressed(VPAD_BUTTON_HOME) || isHeld(VPAD_BUTTON_HOME))
         {
             break;
         }

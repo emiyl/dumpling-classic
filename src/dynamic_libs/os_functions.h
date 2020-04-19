@@ -65,6 +65,7 @@ extern "C" {
 
 /* Handle for coreinit */
 extern unsigned int coreinit_handle;
+extern void InitAcquireOS(void);
 void InitOSFunctionPointers(void);
 
 //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -108,16 +108,21 @@ EXPORT_DECL(int, MCP_Close, int handle);
 EXPORT_DECL(int, LiWaitIopComplete, int unknown_syscall_arg_r3, int * remaining_bytes);
 EXPORT_DECL(int, LiWaitIopCompleteWithInterrupts, int unknown_syscall_arg_r3, int * remaining_bytes);
 
-void InitOSFunctionPointers(void)
-{
-    unsigned int *funcPointer = 0;
+void InitAcquireOS(void) {
     //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //! Lib handle functions
     //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    EXPORT_FUNC_WRITE(OSDynLoad_Acquire, (int (*)(const char*, unsigned *))OS_SPECIFICS->addr_OSDynLoad_Acquire);
-    EXPORT_FUNC_WRITE(OSDynLoad_FindExport, (int (*)(u32, int, const char *, void *))OS_SPECIFICS->addr_OSDynLoad_FindExport);
+    EXPORT_FUNC_WRITE(OSDynLoad_Acquire, (s32 (*)(const char*, unsigned *))OS_SPECIFICS->addr_OSDynLoad_Acquire);
+    EXPORT_FUNC_WRITE(OSDynLoad_FindExport, (s32 (*)(u32, s32, const char *, void *))OS_SPECIFICS->addr_OSDynLoad_FindExport);
 
     OSDynLoad_Acquire("coreinit.rpl", &coreinit_handle);
+}
+
+void InitOSFunctionPointers(void)
+{
+    unsigned int *funcPointer = 0;
+
+    InitAcquireOS();
 
     //!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //! System functions
