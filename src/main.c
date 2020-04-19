@@ -344,16 +344,12 @@ int select_menu() {
     InitSocketFunctionPointers();
 
     InitFSFunctionPointers();
-    InitVPadFunctionPointers();
-
 	for(int i = 0; i < MAX_CONSOLE_LINES_TV; i++)
         consoleArrayTv[i] = NULL;
 
 	for(int i = 0; i < MAX_CONSOLE_LINES_DRC; i++)
         consoleArrayDrc[i] = NULL;
-
-    VPADInit();
-
+		
     // Prepare screen
     int screen_buf0_size = 0;
 
@@ -374,9 +370,6 @@ int select_menu() {
     OSScreenFlipBuffersEx(0);
     OSScreenFlipBuffersEx(1);
 
-    int vpadError = -1;
-    VPADData vpad;
-
     int initScreen = 1;
 
     static const char* selection_text[] =
@@ -392,7 +385,7 @@ int select_menu() {
 
     while(1)
     {
-        VPADRead(0, &vpad, 1, &vpadError);
+        updatePad();
 
         if(initScreen)
         {
@@ -440,14 +433,14 @@ int select_menu() {
             OSScreenFlipBuffersEx(1);
         }
 
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_DOWN))
+        if(isPressed(VPAD_BUTTON_DOWN) || isHeld(VPAD_BUTTON_DOWN))
         {
             selectedItem = (selectedItem + 1) % (sizeof(selection_text) / 4);
             initScreen = 1;
             usleep(150000);
         }
 
-		if(((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_UP))
+		if(isPressed(VPAD_BUTTON_UP) || isHeld(VPAD_BUTTON_UP))
 		{
 			selectedItem--;
 			if(selectedItem < 0)
@@ -456,21 +449,21 @@ int select_menu() {
 			usleep(150000);
 		}
 
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_A))
+        if(isPressed(VPAD_BUTTON_A) || isHeld(VPAD_BUTTON_A))
         {
 			dumpPart[selectedItem] = !dumpPart[selectedItem];
 			initScreen = 1;
             usleep(150000);
         }
 
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_X))
+        if(isPressed(VPAD_BUTTON_X) || isHeld(VPAD_BUTTON_X))
 			return 0;
 
 
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_MINUS))
+        if(isPressed(VPAD_BUTTON_MINUS) || isHeld(VPAD_BUTTON_MINUS))
 			return 1;
 
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_HOME))
+        if(isPressed(VPAD_BUTTON_HOME) || isHeld(VPAD_BUTTON_HOME))
         {
 			loop = 0;
             return 0;
