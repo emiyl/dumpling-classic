@@ -119,20 +119,62 @@ void console_printf(int newline, const char *format, ...)
 }
 
 int ifDirExists(const char *path) {
-	DIR *dir;
-	if ((dir = opendir (path)) == NULL)
-		return 0;
-	else
+	DIR *dir = opendir(path);
+	if (dir != NULL)
+	{
+		closedir(dir);
 		return 1;
+	}
+
+	return 0;
+}
+
+//just to be able to call async
+void someFunc(void *arg)
+{
+    (void)arg;
+}
+
+static int mcp_hook_fd = -1;
+int MCPHookOpen()
+{
+    //take over mcp thread
+    mcp_hook_fd = MCP_Open();
+    if(mcp_hook_fd < 0)
+        return -1;
+    IOS_IoctlAsync(mcp_hook_fd, 0x62, (void*)0, 0, (void*)0, 0, someFunc, (void*)0);
+    //let wupserver start up
+    sleep(1);
+    if(IOSUHAX_Open("/dev/mcp") < 0)
+    {
+        MCP_Close(mcp_hook_fd);
+        mcp_hook_fd = -1;
+        return -1;
+    }
+    return 0;
+}
+
+void MCPHookClose()
+{
+    if(mcp_hook_fd < 0)
+        return;
+    //close down wupserver, return control to mcp
+    IOSUHAX_Close();
+    //wait for mcp to return
+    sleep(1);
+    MCP_Close(mcp_hook_fd);
+    mcp_hook_fd = -1;
 }
 
 int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, int dump_target, int skipMountErrors)
 {
 	int res = IOSUHAX_Open(NULL);
+	if(res < 0 && mcp_hook_fd >= 0)
+        res = 0;
 	if(res < 0)
 	{
 		console_printf(2, "IOSUHAX_open failed");
-		console_printf(1, "Ensure you are using MochaCFW");
+		console_printf(1, "Ensure you are using CFW");
 		sleep(2);
 		return 0;
 	}
@@ -141,7 +183,7 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 	if(fsaFd < 0)
 	{
 		console_printf(2, "IOSUHAX_FSA_Open failed");
-		console_printf(2, "Run MochaCFW again");
+		console_printf(2, "Run CFW again");
 		sleep(2);
 		return 0;
 	}
@@ -185,7 +227,8 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 			UnmountVirtualPaths();
 
 			IOSUHAX_FSA_Close(fsaFd);
-			IOSUHAX_Close();
+			if(mcp_hook_fd < 0)
+				IOSUHAX_Close();
 
 			return 0;
 		}
@@ -225,7 +268,8 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 			UnmountVirtualPaths();
 
 			IOSUHAX_FSA_Close(fsaFd);
-			IOSUHAX_Close();
+			if(mcp_hook_fd < 0)
+				IOSUHAX_Close();
 
 			return 0;
 		}
@@ -258,7 +302,8 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 			UnmountVirtualPaths();
 
 			IOSUHAX_FSA_Close(fsaFd);
-			IOSUHAX_Close();
+			if(mcp_hook_fd < 0)
+				IOSUHAX_Close();
 
 			return 0;
 		}
@@ -291,7 +336,8 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 			UnmountVirtualPaths();
 
 			IOSUHAX_FSA_Close(fsaFd);
-			IOSUHAX_Close();
+			if(mcp_hook_fd < 0)
+				IOSUHAX_Close();
 
 			return 0;
 		}
@@ -322,7 +368,8 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 	UnmountVirtualPaths();
 
 	IOSUHAX_FSA_Close(fsaFd);
-	IOSUHAX_Close();
+	if(mcp_hook_fd < 0)
+		IOSUHAX_Close();
 
 	return 1;
 }
@@ -357,10 +404,12 @@ int titles_menu(int dump_source, int dump_target) {
 	VPADData vpad;
 
 	int res = IOSUHAX_Open(NULL);
+	if(res < 0 && mcp_hook_fd >= 0)
+        res = 0;
 	if(res < 0)
 	{
 		console_printf(2, "IOSUHAX_open failed");
-		console_printf(1, "Ensure you are using MochaCFW");
+		console_printf(1, "Ensure you are using CFW");
 		sleep(1);
 		return 0;
 	}
@@ -369,7 +418,7 @@ int titles_menu(int dump_source, int dump_target) {
 	if(fsaFd < 0)
 	{
 		console_printf(2, "IOSUHAX_FSA_Open failed");
-		console_printf(1, "Run MochaCFW again");
+		console_printf(1, "Run CFW again");
 		sleep(1);
 		return 0;
 	}
@@ -607,7 +656,8 @@ int titles_menu(int dump_source, int dump_target) {
 	unmount_fs("dev");
 
 	IOSUHAX_FSA_Close(fsaFd);
-	IOSUHAX_Close();
+	if(mcp_hook_fd < 0)
+		IOSUHAX_Close();
 
 	while(1)
 	{
@@ -869,9 +919,11 @@ int Menu_Main(void)
 
 	int res = IOSUHAX_Open(NULL);
 	if(res < 0)
+        res = MCPHookOpen();
+	if(res < 0)
 	{
 		console_printf(2, "IOSUHAX_open failed");
-		console_printf(1, "Ensure you are using MochaCFW");
+		console_printf(1, "Ensure you are using CFW");
 		sleep(3);
 		return 0;
 	}
@@ -880,7 +932,7 @@ int Menu_Main(void)
 	if(fsaFd < 0)
 	{
 		console_printf(2, "IOSUHAX_FSA_Open failed");
-		console_printf(1, "Run MochaCFW again");
+		console_printf(1, "Run CFW again");
 		sleep(3);
 		return 0;
 	}
@@ -893,7 +945,8 @@ int Menu_Main(void)
 	unmount_fs("dev");
 
 	IOSUHAX_FSA_Close(fsaFd);
-	IOSUHAX_Close();
+	if(mcp_hook_fd < 0)
+		IOSUHAX_Close();
 
     static const char* mlc_selection_text[] =
     {
@@ -1104,8 +1157,10 @@ int Menu_Main(void)
 								char friends_list_path[29];
 								snprintf(friends_list_path, sizeof(friends_list_path), "/sys/title/00050030/10015%d0A", j);
 
-								IOSUHAX_Open(NULL);
-								int fsaFd = IOSUHAX_FSA_Open();
+								res = IOSUHAX_Open(NULL);
+								if(res < 0 && mcp_hook_fd >= 0)
+        							res = 0;
+								fsaFd = IOSUHAX_FSA_Open();
 
 								char mountPath[255];
 								snprintf(mountPath, sizeof(mountPath), "/vol/storage_mlc01%s", friends_list_path);
@@ -1119,7 +1174,8 @@ int Menu_Main(void)
 								unmount_fs("dev");
 								UnmountVirtualPaths();
 								IOSUHAX_FSA_Close(fsaFd);
-								IOSUHAX_Close();
+								if(mcp_hook_fd < 0)
+									IOSUHAX_Close();
 
 								char dumpPath[255];
 								snprintf(dumpPath, sizeof(mountPath), "storage_mlc:%s", friends_list_path);
@@ -1152,6 +1208,10 @@ int Menu_Main(void)
 
 		usleep(50000);
     }
+
+	// close mcphook
+	if(mcp_hook_fd >= 0)
+		MCPHookClose();
 
     //! free memory
 	for(int i = 0; i < MAX_CONSOLE_LINES_TV; i++)
