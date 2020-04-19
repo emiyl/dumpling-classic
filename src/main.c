@@ -168,10 +168,9 @@ void MCPHookClose()
 
 int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, int dump_target, int skipMountErrors)
 {
-	mcp_hook_fd = -1;
 	int res = IOSUHAX_Open(NULL);
-	if(res < 0)
-        res = MCPHookOpen();
+	if(res < 0 && mcp_hook_fd >= 0)
+        res = 0;
 	if(res < 0)
 	{
 		console_printf(2, "IOSUHAX_open failed");
@@ -228,9 +227,7 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 			UnmountVirtualPaths();
 
 			IOSUHAX_FSA_Close(fsaFd);
-			if(mcp_hook_fd >= 0)
-				MCPHookClose();
-			else
+			if(mcp_hook_fd < 0)
 				IOSUHAX_Close();
 
 			return 0;
@@ -271,9 +268,7 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 			UnmountVirtualPaths();
 
 			IOSUHAX_FSA_Close(fsaFd);
-			if(mcp_hook_fd >= 0)
-				MCPHookClose();
-			else
+			if(mcp_hook_fd < 0)
 				IOSUHAX_Close();
 
 			return 0;
@@ -307,9 +302,7 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 			UnmountVirtualPaths();
 
 			IOSUHAX_FSA_Close(fsaFd);
-			if(mcp_hook_fd >= 0)
-				MCPHookClose();
-			else
+			if(mcp_hook_fd < 0)
 				IOSUHAX_Close();
 
 			return 0;
@@ -343,9 +336,7 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 			UnmountVirtualPaths();
 
 			IOSUHAX_FSA_Close(fsaFd);
-			if(mcp_hook_fd >= 0)
-				MCPHookClose();
-			else
+			if(mcp_hook_fd < 0)
 				IOSUHAX_Close();
 
 			return 0;
@@ -377,9 +368,7 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 	UnmountVirtualPaths();
 
 	IOSUHAX_FSA_Close(fsaFd);
-	if(mcp_hook_fd >= 0)
-		MCPHookClose();
-	else
+	if(mcp_hook_fd < 0)
 		IOSUHAX_Close();
 
 	return 1;
@@ -414,10 +403,9 @@ int titles_menu(int dump_source, int dump_target) {
 	int vpadError = -1;
 	VPADData vpad;
 
-	mcp_hook_fd = -1;
 	int res = IOSUHAX_Open(NULL);
-	if(res < 0)
-        res = MCPHookOpen();
+	if(res < 0 && mcp_hook_fd >= 0)
+        res = 0;
 	if(res < 0)
 	{
 		console_printf(2, "IOSUHAX_open failed");
@@ -668,9 +656,7 @@ int titles_menu(int dump_source, int dump_target) {
 	unmount_fs("dev");
 
 	IOSUHAX_FSA_Close(fsaFd);
-	if(mcp_hook_fd >= 0)
-		MCPHookClose();
-	else
+	if(mcp_hook_fd < 0)
 		IOSUHAX_Close();
 
 	while(1)
@@ -931,7 +917,6 @@ int Menu_Main(void)
     int initScreen = 1;
 	int mlc_only = 0;
 
-	mcp_hook_fd = -1;
 	int res = IOSUHAX_Open(NULL);
 	if(res < 0)
         res = MCPHookOpen();
@@ -960,9 +945,7 @@ int Menu_Main(void)
 	unmount_fs("dev");
 
 	IOSUHAX_FSA_Close(fsaFd);
-	if(mcp_hook_fd >= 0)
-		MCPHookClose();
-	else
+	if(mcp_hook_fd < 0)
 		IOSUHAX_Close();
 
     static const char* mlc_selection_text[] =
@@ -1174,10 +1157,9 @@ int Menu_Main(void)
 								char friends_list_path[29];
 								snprintf(friends_list_path, sizeof(friends_list_path), "/sys/title/00050030/10015%d0A", j);
 
-								mcp_hook_fd = -1;
 								res = IOSUHAX_Open(NULL);
-								if(res < 0)
-        							res = MCPHookOpen();
+								if(res < 0 && mcp_hook_fd >= 0)
+        							res = 0;
 								fsaFd = IOSUHAX_FSA_Open();
 
 								char mountPath[255];
@@ -1192,9 +1174,7 @@ int Menu_Main(void)
 								unmount_fs("dev");
 								UnmountVirtualPaths();
 								IOSUHAX_FSA_Close(fsaFd);
-								if(mcp_hook_fd >= 0)
-									MCPHookClose();
-								else
+								if(mcp_hook_fd < 0)
 									IOSUHAX_Close();
 
 								char dumpPath[255];
@@ -1228,6 +1208,10 @@ int Menu_Main(void)
 
 		usleep(50000);
     }
+
+	// close mcphook
+	if(mcp_hook_fd >= 0)
+		MCPHookClose();
 
     //! free memory
 	for(int i = 0; i < MAX_CONSOLE_LINES_TV; i++)
