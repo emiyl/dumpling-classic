@@ -9,19 +9,16 @@
 #include "dynamic_libs/vpad_functions.h"
 #include "fs/fs_utils.h"
 #include "main.h"
+#include "utils/padutils.h"
 
 #define BUFFER_SIZE     0x80000
 
 void console_printf(int newline, const char *format, ...);
 int CheckCancel(void)
 {
-    int vpadError = -1;
-    VPADData vpad;
+    updatePad();
 
-    //! update only at 50 Hz, thats more than enough
-    VPADRead(0, &vpad, 1, &vpadError);
-
-    if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_B))
+    if(isPressed(VPAD_BUTTON_B) || isHeld(VPAD_BUTTON_B))
     {
         return 1;
     }

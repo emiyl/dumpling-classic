@@ -12,7 +12,7 @@
 
 Dumpling uses iosuhax and requires [MochaCFW](https://gbatemp.net/threads/mocha-cfw-the-sweet-chocolate-to-your-latte.452940/) to run, and won't work without it. You can probably use a fw.img with iosuhax as well, but I haven't tested that and it's easier to use Mocha.
 
-To install, simply download the dumpling `.elf` file from the [releases](https://github.com/emiyl/dumpling/releases/latest) page, and drag and drop it to the `/wiiu/apps` folder on your SD card.
+To install, simply download the dumpling `.zip` file from the [releases](https://github.com/emiyl/dumpling/releases/latest) page, and extract it to the root of your SD card.
 
 ## Features
 
