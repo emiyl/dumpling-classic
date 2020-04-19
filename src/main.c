@@ -119,11 +119,14 @@ void console_printf(int newline, const char *format, ...)
 }
 
 int ifDirExists(const char *path) {
-	DIR *dir;
-	if ((dir = opendir (path)) == NULL)
-		return 0;
-	else
+	DIR *dir = opendir(path);
+	if (dir != NULL)
+	{
+		closedir(dir);
 		return 1;
+	}
+
+	return 0;
 }
 
 //just to be able to call async
@@ -1172,10 +1175,10 @@ int Menu_Main(void)
 								snprintf(friends_list_path, sizeof(friends_list_path), "/sys/title/00050030/10015%d0A", j);
 
 								mcp_hook_fd = -1;
-								IOSUHAX_Open(NULL);
+								res = IOSUHAX_Open(NULL);
 								if(res < 0)
         							res = MCPHookOpen();
-								int fsaFd = IOSUHAX_FSA_Open();
+								fsaFd = IOSUHAX_FSA_Open();
 
 								char mountPath[255];
 								snprintf(mountPath, sizeof(mountPath), "/vol/storage_mlc01%s", friends_list_path);
