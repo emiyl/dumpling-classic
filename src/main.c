@@ -480,8 +480,6 @@ int select_menu() {
     }
 }
 
-const char head_string[50] = "-- dumpling v1.1 pre-release by emiyl --";
-
 int titles_menu(int dump_source, int dump_target) {
 	for(int i = 0; i < MAX_CONSOLE_LINES_TV; i++)
 		consoleArrayTv[i] = NULL;
