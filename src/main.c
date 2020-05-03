@@ -337,7 +337,7 @@ char **usb_stored_folders = NULL;
 
 int dumpPart[4] = {1,0,0,0};
 
-const char head_string[50] = "-- dumpling v1.1 pre-release by emiyl --";
+const char head_string[50] = "-- dumpling v1.1 by emiyl --";
 
 int select_menu() {
     InitOSFunctionPointers();
@@ -381,7 +381,6 @@ int select_menu() {
     };
 
     int selectedItem = 0;
-	dumpPart[0] = 1;
 
     while(1)
     {
@@ -426,7 +425,7 @@ int select_menu() {
 					console_print_pos(4, 4 + i, "  %s", selection_text[i]);
             }
 
-            console_print_pos(0, 16, "Press X to return.");
+            console_print_pos(0, 16, "Press B to return.");
 
             // Flip buffers
             OSScreenFlipBuffersEx(0);
@@ -456,7 +455,7 @@ int select_menu() {
             usleep(150000);
         }
 
-        if(isPressed(VPAD_BUTTON_X) || isHeld(VPAD_BUTTON_X))
+        if(isPressed(VPAD_BUTTON_B) || isHeld(VPAD_BUTTON_B))
 			return 0;
 
 
@@ -548,9 +547,9 @@ int titles_menu(int dump_source, int dump_target) {
 				mlc_meta_names[mlc_folder_string_count - 1] = single_string;
 		}
 		closedir (dir);
-		mlc_page_count = (mlc_folder_string_count / 8);
-		if ((mlc_folder_string_count % 8) > 0)
-			mlc_page_count++;
+		mlc_page_count = (mlc_folder_string_count / 8) + 1;
+		if (mlc_folder_string_count % 8 == 0)
+			mlc_page_count--;
 	} else {
 		perror ("");
 		console_printf(1, "MLC mounting failed");
@@ -656,9 +655,10 @@ int titles_menu(int dump_source, int dump_target) {
 				usb_meta_names[usb_folder_string_count - 1] = single_string;
 		}
 		closedir (dir);
-		usb_page_count = (usb_folder_string_count / 8);
-		if ((usb_folder_string_count % 8) > 0)
-			usb_page_count++;
+		usb_page_count = (usb_folder_string_count / 8) + 1;
+		if (usb_folder_string_count % 8 == 0)
+			usb_page_count--;
+		sleep(3);
 	} else {
 		perror ("");
 		mlc_only = 1;
@@ -736,14 +736,14 @@ int titles_menu(int dump_source, int dump_target) {
 	if(mcp_hook_fd < 0)
 		IOSUHAX_Close();
 
+	sleep(1);
+
 	while(1)
 	{
 		updatePad();
 
 		if (mlc_only)
 			dump_source = 0;
-			
-		dumpPart[0] = 1;
 
 		// Page checks
 		if (page_number < 1)
@@ -953,6 +953,8 @@ int titles_menu(int dump_source, int dump_target) {
 						snprintf(dir, sizeof(dir), "saves/%s", ((dump_source) ? usb_meta_names[i] : mlc_meta_names[i]));
 						dumpFunc(selection_path, dir, 0, dump_source, dump_target, 1);
 					}
+					console_printf(1, "Queue finished.");
+					sleep(1);
 				}
 				initScreen = 1;
 			}
@@ -1122,8 +1124,6 @@ int Menu_Main(void)
 
 		if (mlc_only)
 			dump_source = 0;
-		
-		dumpPart[0] = 1;
 
         if(initScreen)
         {
@@ -1225,6 +1225,7 @@ int Menu_Main(void)
         if(isPressed(VPAD_BUTTON_X) || isHeld(VPAD_BUTTON_X))
         {
 			usleep(150000);
+			console_printf(1, "Loading...");
 			titles_menu(dump_source, dump_target);
 			initScreen = 1;
 			usleep(150000);
