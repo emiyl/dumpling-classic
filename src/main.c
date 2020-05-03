@@ -299,7 +299,7 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 		strcpy(targetPath, "dev:/");
 
 		if (dump_target) strcpy(toDrive, "usb");
-		if (!strcmp(dump_dir,"online_files/mlc01"))
+		if (!strcmp(dump_dir,"account_data/mlc01"))
 			snprintf(toDir, sizeof(toDir), "%s:/dumpling/%s/%s", toDrive, dump_dir, path + 13);
 		else
 			snprintf(toDir, sizeof(toDir), "%s:/dumpling/%s", toDrive, dump_dir);
@@ -337,7 +337,7 @@ char **usb_stored_folders = NULL;
 
 int dumpPart[4] = {1,0,0,0};
 
-const char head_string[50] = "-- dumpling v1.1 by emiyl --";
+const char head_string[50] = "-- dumpling v1.1.1 by emiyl --";
 
 int select_menu() {
     InitOSFunctionPointers();
@@ -1066,7 +1066,7 @@ int Menu_Main(void)
 
     static const char* mlc_selection_dir[] =
     {
-        "online_files/mlc01",
+        "account_data/mlc01",
         "friends_list",
         "disc/undefined",
         "games",
