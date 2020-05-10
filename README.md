@@ -28,6 +28,7 @@ To install, simply download the dumpling `.zip` file from the [releases](https:/
 ## To-do
 
 1. Support dumping of `otp.bin` and `seeprom.bin`
+2. Multithreading to allow metadata fetching to execute in background
 
 ## Credits
 
