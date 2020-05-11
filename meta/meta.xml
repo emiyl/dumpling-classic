@@ -2,8 +2,8 @@
 <app version="1">
   <name>dumpling</name>
   <coder>emiyl</coder>
-  <version>1.1.1</version>
-  <release_date>20200503200000</release_date>
+  <version>1.1.2</version>
+  <release_date>20200510200000</release_date>
   <short_description>Simple Cemu File Dumper</short_description>
   <long_description>Dumpling is a simple Wii U file dumper, developed with the intent of making Cemu set-up faster and easier.</long_description>
 </app>

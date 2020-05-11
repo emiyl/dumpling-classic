@@ -130,6 +130,17 @@ int ifDirExists(const char *path) {
 	return 0;
 }
 
+int ifFileExists(const char *path) {
+	FILE *fp = fopen(path, "r");
+	if (fp != NULL)
+	{
+		fclose(fp);
+		return 1;
+	}
+
+	return 0;
+}
+
 //just to be able to call async
 void someFunc(void *arg)
 {
@@ -194,10 +205,18 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 	{
 		fatInitDefault();
 
-		const char *dev_path = (!dump_source && dev) ? "/dev/odd03" : NULL;
+		char *dev_path = "/dev/odd03";
+		if (!dump_source && (dev > 0)) {
+			if (dev == 2) strcpy(dev_path, "/dev/odd04");
+		} else {
+			dev_path = NULL;
+		}
 
 		char mount_path[255];
-		if (!dump_source && dev) strcpy(mount_path, "/vol/storage_odd_content");
+		if (!dump_source && (dev > 0)) {
+			strcpy(mount_path, "/vol/storage_odd_content");
+			if (dev == 2) strcpy(mount_path, "/vol/storage_odd_content2");
+		}
 		else if (dump_source) snprintf(mount_path, sizeof(mount_path), "/vol/storage_usb01%s", strchr(path, '/'));
 		else snprintf(mount_path, sizeof(mount_path), "/vol/storage_mlc01%s", strchr(path, '/'));
 
@@ -219,7 +238,7 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 					usleep(50000);
 				}
 			}
-			
+
 			unmount_fs("dev");
 			UnmountVirtualPaths();
 
@@ -233,7 +252,7 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 		VirtualMountDevice("dev:/");
 		VirtualMountDevice("sd:/");
 		VirtualMountDevice("usb:/");
-		
+
 		if (!ifDirExists("sd:/") && !dump_target)
 		{
 			console_printf(1, "SD mount failed", dev_path, mount_path);
@@ -263,7 +282,7 @@ int dumpFunc(const char *path, const char *dump_dir, int dev, int dump_source, i
 
 			return 0;
 		}
-		
+
 		if (!ifDirExists("usb:/") && dump_target)
 		{
 			console_printf(1, "USB mount failed", dev_path, mount_path);
@@ -337,7 +356,7 @@ char **usb_stored_folders = NULL;
 
 int dumpPart[4] = {1,0,0,0};
 
-const char head_string[50] = "-- dumpling v1.1.1 by emiyl --";
+const char head_string[50] = "-- dumpling v1.1.2 by emiyl --";
 
 int select_menu() {
     InitOSFunctionPointers();
@@ -349,7 +368,7 @@ int select_menu() {
 
 	for(int i = 0; i < MAX_CONSOLE_LINES_DRC; i++)
         consoleArrayDrc[i] = NULL;
-		
+
     // Prepare screen
     int screen_buf0_size = 0;
 
@@ -439,33 +458,33 @@ int select_menu() {
             usleep(150000);
         }
 
-		if(isPressed(VPAD_BUTTON_UP) || isHeld(VPAD_BUTTON_UP))
-		{
-			selectedItem--;
-			if(selectedItem < 0)
-				selectedItem =  (sizeof(selection_text) / 4) - 1;
-			initScreen = 1;
-			usleep(150000);
-		}
+				if(isPressed(VPAD_BUTTON_UP) || isHeld(VPAD_BUTTON_UP))
+				{
+					selectedItem--;
+					if(selectedItem < 0)
+						selectedItem =  (sizeof(selection_text) / 4) - 1;
+					initScreen = 1;
+					usleep(150000);
+				}
 
         if(isPressed(VPAD_BUTTON_A) || isHeld(VPAD_BUTTON_A))
         {
-			dumpPart[selectedItem] = !dumpPart[selectedItem];
-			initScreen = 1;
-            usleep(150000);
+					dumpPart[selectedItem] = !dumpPart[selectedItem];
+					initScreen = 1;
+          usleep(150000);
         }
 
         if(isPressed(VPAD_BUTTON_B) || isHeld(VPAD_BUTTON_B))
-			return 0;
+					return 0;
 
 
         if(isPressed(VPAD_BUTTON_MINUS) || isHeld(VPAD_BUTTON_MINUS))
-			return 1;
+					return 1;
 
         if(isPressed(VPAD_BUTTON_HOME) || isHeld(VPAD_BUTTON_HOME))
         {
-			loop = 0;
-            return 0;
+					loop = 0;
+          return 0;
         }
 
 		usleep(50000);
@@ -502,7 +521,7 @@ int titles_menu(int dump_source, int dump_target) {
 	int initScreen = 1;
 	int selectedItem = 0;
 	u32 page_number = 1;
-	
+
 	const char *dev_path = NULL;
 
 	// MLC
@@ -512,7 +531,7 @@ int titles_menu(int dump_source, int dump_target) {
 	char **mlc_folders = NULL;
 
 	int ret = mount_fs("dev", fsaFd, dev_path, "/vol/storage_mlc01/usr/title/00050000");
-	if (ret < 0) 
+	if (ret < 0)
 	{
 		console_printf(1, "MLC mounting failed");
 		sleep(1);
@@ -579,7 +598,7 @@ int titles_menu(int dump_source, int dump_target) {
 
 			char xml_path[28];
 			snprintf(xml_path, sizeof(xml_path), "dev:/%s/meta/meta.xml", mlc_folders[i]);
-			
+
 			FILE *fp;
 			mxml_node_t *tree;
 
@@ -624,7 +643,7 @@ int titles_menu(int dump_source, int dump_target) {
 
 	u32 usb_folder_string_count = 0;
 	u32 usb_page_count = 0;
-	
+
 	int mlc_only = 0;
 	char **usb_folders = NULL;
 
@@ -673,11 +692,11 @@ int titles_menu(int dump_source, int dump_target) {
 
 	int usb_checkBox[usb_folder_string_count];
 
-	if (!mlc_only) 
+	if (!mlc_only)
 	{
 		for(u32 i = 0; i < usb_folder_string_count; i++)
 			mlc_checkBox[i] = 0;
-	
+
 		usb_meta_names = (char**)malloc(usb_folder_string_count*sizeof(char*));
 		if (!usb_meta_names) {
 			return 0;
@@ -692,7 +711,7 @@ int titles_menu(int dump_source, int dump_target) {
 
 				char xml_path[28];
 				snprintf(xml_path, sizeof(xml_path), "dev:/%s/meta/meta.xml", usb_folders[i]);
-				
+
 				FILE *fp;
 				mxml_node_t *tree;
 
@@ -735,8 +754,6 @@ int titles_menu(int dump_source, int dump_target) {
 	IOSUHAX_FSA_Close(fsaFd);
 	if(mcp_hook_fd < 0)
 		IOSUHAX_Close();
-
-	sleep(1);
 
 	while(1)
 	{
@@ -786,9 +803,9 @@ int titles_menu(int dump_source, int dump_target) {
 
 			console_print_pos(0, 4, "Press A to select and START to begin dumping.");
 			if (mlc_only)
-            	console_print_pos(0, 5, "Use ZL/ZR to change target.");
+      	console_print_pos(0, 5, "Use ZL/ZR to change target.");
 			else
-            	console_print_pos(0, 5, "Use L/R to change source and ZL/ZR to change target.");
+      	console_print_pos(0, 5, "Use L/R to change source and ZL/ZR to change target.");
 
 			for(u32 i = 0; i < ((dump_source) ? usb_page_count : mlc_page_count); i++) {
 				if (i == page_number - 1)
@@ -918,39 +935,55 @@ int titles_menu(int dump_source, int dump_target) {
 			for(u32 i = 0; i < ((dump_source) ? usb_folder_string_count : mlc_folder_string_count); i++)
 			{
 				if ((dump_source) ? usb_checkBox[i] : mlc_checkBox[i]) {
-
 					char selection_path[255];
 					char dir[255];
+					char *meta_name = (dump_source) ? usb_meta_names[i] : mlc_meta_names[i];
+
+					for(int j = 0, k = 0; j < 256 && k < 256; ++j, ++k) {
+					  while(meta_name[k] == ':' || meta_name[k] == '.' || meta_name[k] == 0) { // skip all ':', break if we surpass limit
+					    if (meta_name[k] == 0) { // we hit a string end, pretend surpass limit for the other if outside this loop
+					      k = 256;
+					      break;
+					    }
+					    ++k;
+					    if (k >= 256) break;
+					  }
+					  if (k >= 256) { // we surpass limit, string end, set the null
+					    meta_name[j] = 0;
+					    break;
+					  }
+					  meta_name[j] = meta_name[k];
+					}
 
 					// Dump game
 					if (dumpPart[0])
 					{
 						snprintf(selection_path, sizeof(selection_path), "storage_%s01:/usr/title/00050000/%s", (dump_source) ? "usb" : "mlc", ((dump_source) ? usb_folders[i] : mlc_folders[i]));
-						snprintf(dir, sizeof(dir), "games/%s", ((dump_source) ? usb_meta_names[i] : mlc_meta_names[i]));
+						snprintf(dir, sizeof(dir), "games/%s", meta_name);
 						dumpFunc(selection_path, dir, 0, dump_source, dump_target, 0);
 					}
-					 
+
 					// Dump update
 					if (dumpPart[1])
 					{
 					snprintf(selection_path, sizeof(selection_path), "storage_%s01:/usr/title/0005000E/%s", (dump_source) ? "usb" : "mlc", ((dump_source) ? usb_folders[i] : mlc_folders[i]));
-					snprintf(dir, sizeof(dir), "updates/%s", ((dump_source) ? usb_meta_names[i] : mlc_meta_names[i]));
+					snprintf(dir, sizeof(dir), "updates/%s", meta_name);
 					dumpFunc(selection_path, dir, 0, dump_source, dump_target, 1);
 					}
-					 
+
 					// Dump update
 					if (dumpPart[2])
 					{
 						snprintf(selection_path, sizeof(selection_path), "storage_%s01:/usr/title/0005000C/%s", (dump_source) ? "usb" : "mlc", ((dump_source) ? usb_folders[i] : mlc_folders[i]));
-						snprintf(dir, sizeof(dir), "dlc/%s", ((dump_source) ? usb_meta_names[i] : mlc_meta_names[i]));
+						snprintf(dir, sizeof(dir), "dlc/%s", meta_name);
 						dumpFunc(selection_path, dir, 0, dump_source, dump_target, 1);
 					}
-					 
+
 					// Saves
 					if (dumpPart[3])
 					{
 						snprintf(selection_path, sizeof(selection_path), "storage_%s01:/usr/save/00050000/%s", (dump_source) ? "usb" : "mlc", ((dump_source) ? usb_folders[i] : mlc_folders[i]));
-						snprintf(dir, sizeof(dir), "saves/%s", ((dump_source) ? usb_meta_names[i] : mlc_meta_names[i]));
+						snprintf(dir, sizeof(dir), "saves/%s", meta_name);
 						dumpFunc(selection_path, dir, 0, dump_source, dump_target, 1);
 					}
 					console_printf(1, "Queue finished.");
@@ -1040,74 +1073,74 @@ int Menu_Main(void)
 	if(mcp_hook_fd < 0)
 		IOSUHAX_Close();
 
-    static const char* mlc_selection_text[] =
-    {
-        "Account Data",
-        "Friends List",
-        "Disc dump",
-        "All digital games",
-        "All digital updates",
-        "All digital DLC",
-        "All save data",
-        "Full MLC01",
-    };
+  static const char* mlc_selection_text[] =
+  {
+      "Account Data",
+      "Friends List",
+      "Disc dump",
+      "All digital games",
+      "All digital updates",
+      "All digital DLC",
+      "All save data",
+      "Full MLC01",
+  };
 
-    static const char* mlc_selection_paths[] =
-    {
-        NULL,
-        NULL,
-        "storage_odd_content:/",
-        "storage_mlc:/usr/title/00050000",
-        "storage_mlc:/usr/title/0005000E",
-        "storage_mlc:/usr/title/0005000C",
-        "storage_mlc:/usr/save/00050000",
-        "storage_mlc:/",
-    };
+  static const char* mlc_selection_paths[] =
+  {
+      NULL,
+      NULL,
+      "storage_odd_content:/",
+      "storage_mlc:/usr/title/00050000",
+      "storage_mlc:/usr/title/0005000E",
+      "storage_mlc:/usr/title/0005000C",
+      "storage_mlc:/usr/save/00050000",
+      "storage_mlc:/",
+  };
 
-    static const char* mlc_selection_dir[] =
-    {
-        "account_data/mlc01",
-        "friends_list",
-        "disc/undefined",
-        "games",
-        "updates",
-        "dlc",
-        "saves",
-        "nand",
-    };
+  static const char* mlc_selection_dir[] =
+  {
+      "account_data/mlc01",
+      "friends_list",
+      "disc/undefined",
+      "games",
+      "updates",
+      "dlc",
+      "saves",
+      "nand",
+  };
 
-    static const char* usb_selection_text[] =
-    {
-        "All digital games",
-        "All digital updates",
-        "All digital DLC",
-        "All save data",
-    };
+  static const char* usb_selection_text[] =
+  {
+      "All digital games",
+      "All digital updates",
+      "All digital DLC",
+      "All save data",
+  };
 
-    static const char* usb_selection_paths[] =
-    {
-        "storage_usb:/usr/title/00050000",
-        "storage_usb:/usr/title/0005000E",
-        "storage_usb:/usr/title/0005000C",
-        "storage_usb:/usr/save/00050000",
-    };
+  static const char* usb_selection_paths[] =
+  {
+      "storage_usb:/usr/title/00050000",
+      "storage_usb:/usr/title/0005000E",
+      "storage_usb:/usr/title/0005000C",
+      "storage_usb:/usr/save/00050000",
+  };
 
-    static const char* usb_selection_dir[] =
-    {
-        "games",
-        "updates",
-        "dlc",
-        "saves",
-    };
+  static const char* usb_selection_dir[] =
+  {
+      "games",
+      "updates",
+      "dlc",
+      "saves",
+  };
 
-    static const char* online_files_paths[] =
-    {
-		"storage_mlc:/usr/save/system/act",
-		"storage_mlc:/sys/title/0005001b/10054000/",
-		"storage_mlc:/sys/title/0005001b/10056000",
-    };
+  static const char* online_files_paths[] =
+  {
+	"storage_mlc:/usr/save/system/act",
+	"storage_mlc:/sys/title/0005001b/10054000/",
+	"storage_mlc:/sys/title/0005001b/10056000",
+  };
 
-    int selectedItem = 0;
+  int selectedItem = 0;
 	int dump_source = 0;
 	int dump_target = 0;
 
@@ -1225,7 +1258,6 @@ int Menu_Main(void)
         if(isPressed(VPAD_BUTTON_X) || isHeld(VPAD_BUTTON_X))
         {
 			usleep(150000);
-			console_printf(1, "Loading...");
 			titles_menu(dump_source, dump_target);
 			initScreen = 1;
 			usleep(150000);
@@ -1242,7 +1274,7 @@ int Menu_Main(void)
 						if (i == 0)
 							for (j=0;j<sizeof(online_files_paths)/4;j++)
 								dumpFunc(online_files_paths[j], (dump_source) ? usb_selection_dir[i] : mlc_selection_dir[i], dev, dump_source, dump_target, 0);
-						if (i == 1) 
+						if (i == 1)
 						{
 							for (j=0;j<3;j++)
 							{
@@ -1286,24 +1318,21 @@ int Menu_Main(void)
 						if (i == 2)
 						{
 							int disc_mounted = 1;
-							
+
 							res = IOSUHAX_Open(NULL);
 							if(res < 0)
 							{
 								console_printf(1, "IOSUHAX_open failed");
 								console_printf(1, "Ensure you are using MochaCFW");
 								console_printf(1, "Press B to return.");
-
-								InitVPadFunctionPointers();
-								VPADInit();
-								int vpadError = -1;
-								VPADData vpad;
 								usleep(150000);
 
 								for(;;) {
-									VPADRead(0, &vpad, 1, &vpadError);
-									if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_B))
+					        updatePad();
+					        if(isPressed(VPAD_BUTTON_B) || isHeld(VPAD_BUTTON_B))
+					        {
 										break;
+					        }
 									usleep(50000);
 								}
 								disc_mounted = 0;
@@ -1315,17 +1344,14 @@ int Menu_Main(void)
 								console_printf(1, "IOSUHAX_FSA_Open failed");
 								console_printf(1, "Run MochaCFW again");
 								console_printf(1, "Press B to return.");
-
-								InitVPadFunctionPointers();
-								VPADInit();
-								int vpadError = -1;
-								VPADData vpad;
 								usleep(150000);
 
 								for(;;) {
-									VPADRead(0, &vpad, 1, &vpadError);
-									if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_B))
+					        updatePad();
+					        if(isPressed(VPAD_BUTTON_B) || isHeld(VPAD_BUTTON_B))
+					        {
 										break;
+					        }
 									usleep(50000);
 								}
 								disc_mounted = 0;
@@ -1337,20 +1363,17 @@ int Menu_Main(void)
 								console_printf(1, "Disc mounting failed");
 								console_printf(2, "Ensure the drive is connected.");
 								console_printf(1, "Press B to return.");
-
-								InitVPadFunctionPointers();
-								VPADInit();
-								int vpadError = -1;
-								VPADData vpad;
 								usleep(150000);
 
 								for(;;) {
-									VPADRead(0, &vpad, 1, &vpadError);
-									if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_B))
+					        updatePad();
+					        if(isPressed(VPAD_BUTTON_B) || isHeld(VPAD_BUTTON_B))
+					        {
 										break;
+					        }
 									usleep(50000);
 								}
-								
+
 								unmount_fs("dev");
 
 								IOSUHAX_FSA_Close(fsaFd);
@@ -1361,149 +1384,201 @@ int Menu_Main(void)
 
 							if (disc_mounted) {
 								select_menu();
-								
+
 								console_printf(1, "Fetching metadata...");
-								int fetched_metadata = 1;
-								
+
 								FILE *fp;
 								mxml_node_t *tree;
+								int fetched_metadata = 1;
+								dev = 1;
 
 								fp = fopen("dev:/meta/meta.xml", "r");
-								tree = mxmlLoadFile(NULL, fp, MXML_OPAQUE_CALLBACK);
-
-								char* meta_xml_getid(mxml_node_t *tree) {
-									    if (!tree) {
-											console_printf(1, "[ERROR] NO TREE!\n");
-											return NULL;
-										}
-										mxml_node_t* value = mxmlFindPath(tree, "menu/title_id");
-										if (!value) {
-											console_printf(1, "[ERROR] NO VALUE!\n");
-											return NULL;
-										}
-										mxml_type_t type = mxmlGetType(value);
-										const char* str = NULL;
-										if (type == MXML_OPAQUE) str = mxmlGetOpaque(value);
-										else if (type == MXML_TEXT) str = mxmlGetText(value, NULL);
-										else {
-											console_printf(1, "[ERROR] TYPE NOT OPAQUE OR TEXT!\n");
-											mxmlDelete(value);
-											return NULL;
-										}
-										if (!str) {
-											console_printf(1, "[ERROR] NO STRING!\n");
-											mxmlDelete(value);
-											return NULL;
-										}
-										char* newstr = (char*)malloc(strlen(str) + 1);
-										if (!newstr) {
-											console_printf(1, "[ERROR] NO MEMORY!\n");
-											mxmlDelete(value);
-											return NULL;
-										}
-										strcpy(newstr, str + 8);
-										mxmlDelete(value);
-										//console_printf(1, "[DEBUG] WE GOT STRING! (%s)\n", newstr);
-										return newstr;
-								}
-
-								char* meta_xml_getname(mxml_node_t *tree) {
-									    if (!tree) {
-											console_printf(1, "[ERROR] NO TREE!\n");
-											return NULL;
-										}
-										mxml_node_t* value = mxmlFindPath(tree, "menu/shortname_en");
-										if (!value) {
-											console_printf(1, "[ERROR] NO VALUE!\n");
-											return NULL;
-										}
-										mxml_type_t type = mxmlGetType(value);
-										const char* str = NULL;
-										if (type == MXML_OPAQUE) str = mxmlGetOpaque(value);
-										else if (type == MXML_TEXT) str = mxmlGetText(value, NULL);
-										else {
-											console_printf(1, "[ERROR] TYPE NOT OPAQUE OR TEXT!\n");
-											mxmlDelete(value);
-											return NULL;
-										}
-										if (!str) {
-											console_printf(1, "[ERROR] NO STRING!\n");
-											mxmlDelete(value);
-											return NULL;
-										}
-										char* newstr = (char*)malloc(strlen(str) + 1);
-										if (!newstr) {
-											console_printf(1, "[ERROR] NO MEMORY!\n");
-											mxmlDelete(value);
-											return NULL;
-										}
-										strcpy(newstr, str);
-										mxmlDelete(value);
-										//console_printf(1, "[DEBUG] WE GOT STRING! (%s)\n", newstr);
-										return newstr;
-								}
-
-								char *disc_game_id = meta_xml_getid(tree);
-								if (disc_game_id == NULL)
+								if (fp == NULL)
 								{
-									console_printf(1, "Failed to get game ID!");
-									fetched_metadata = 0;
+									fclose(fp);
+									unmount_fs("dev");
+									dev = 2;
+									res = mount_fs("dev", fsaFd, "/dev/odd04", "/vol/storage_odd_content2");
+									if (res < 0)
+									{
+										console_printf(1, "Disc mounting failed");
+										console_printf(2, "Ensure the drive is connected.");
+										console_printf(1, "Press B to return.");
+										usleep(150000);
+
+										for(;;) {
+							        updatePad();
+							        if(isPressed(VPAD_BUTTON_B) || isHeld(VPAD_BUTTON_B))
+							        {
+												break;
+							        }
+											usleep(50000);
+										}
+
+										unmount_fs("dev");
+
+										IOSUHAX_FSA_Close(fsaFd);
+										IOSUHAX_Close();
+
+										disc_mounted = 0;
+									} else {
+										fp = fopen("dev:/meta/meta.xml", "r");
+									}
 								}
-								char *disc_game_name = meta_xml_getname(tree);
-								if (disc_game_name == NULL)
-								{
-									console_printf(1, "Failed to get game name!");
-									fetched_metadata = 0;
-								}
-								mxmlDelete(tree);
-								fclose(fp);
 
-								unmount_fs("dev");
+								if (disc_mounted) {
+									tree = mxmlLoadFile(NULL, fp, MXML_OPAQUE_CALLBACK);
 
-								IOSUHAX_FSA_Close(fsaFd);
-								IOSUHAX_Close();
-
-								if (fetched_metadata) {
-									console_printf(1, "Started dumping...");
-
-									char usb_path[255], mlc_path[255], disc_dump_path[255];
-
-									// Dump game
-									if (dumpPart[0])
-									{
-										dev = 1;
-										snprintf(disc_dump_path, sizeof(disc_dump_path), "disc/%s/game", disc_game_name);
-										dumpFunc((dump_source) ? usb_selection_paths[i] : mlc_selection_paths[i], disc_dump_path, dev, dump_source, dump_target, 0);
+									char* meta_xml_getid(mxml_node_t *tree) {
+										    if (!tree) {
+												console_printf(1, "[ERROR] NO TREE!\n");
+												return NULL;
+											}
+											mxml_node_t* value = mxmlFindPath(tree, "menu/title_id");
+											if (!value) {
+												console_printf(1, "[ERROR] NO VALUE!\n");
+												return NULL;
+											}
+											mxml_type_t type = mxmlGetType(value);
+											const char* str = NULL;
+											if (type == MXML_OPAQUE) str = mxmlGetOpaque(value);
+											else if (type == MXML_TEXT) str = mxmlGetText(value, NULL);
+											else {
+												console_printf(1, "[ERROR] TYPE NOT OPAQUE OR TEXT!\n");
+												mxmlDelete(value);
+												return NULL;
+											}
+											if (!str) {
+												console_printf(1, "[ERROR] NO STRING!\n");
+												mxmlDelete(value);
+												return NULL;
+											}
+											char* newstr = (char*)malloc(strlen(str) + 1);
+											if (!newstr) {
+												console_printf(1, "[ERROR] NO MEMORY!\n");
+												mxmlDelete(value);
+												return NULL;
+											}
+											strcpy(newstr, str + 8);
+											mxmlDelete(value);
+											return newstr;
 									}
 
-									// Dump update
-									if (dumpPart[1])
-									{
-										snprintf(usb_path, sizeof(usb_path), "storage_mlc01:/usr/title/0005000E/%s", disc_game_id);
-										snprintf(mlc_path, sizeof(mlc_path), "storage_usb01:/usr/title/0005000E/%s", disc_game_id);
-										snprintf(disc_dump_path, sizeof(disc_dump_path), "disc/%s/update", disc_game_name);
-										dumpFunc(usb_path, disc_dump_path, 0, dump_source, dump_target, 1);
-										dumpFunc(mlc_path, disc_dump_path, 0, dump_source, dump_target, 1);
+									char* meta_xml_getname(mxml_node_t *tree) {
+										    if (!tree) {
+												console_printf(1, "[ERROR] NO TREE!\n");
+												return NULL;
+											}
+											mxml_node_t* value = mxmlFindPath(tree, "menu/shortname_en");
+											if (!value) {
+												console_printf(1, "[ERROR] NO VALUE!\n");
+												return NULL;
+											}
+											mxml_type_t type = mxmlGetType(value);
+											const char* str = NULL;
+											if (type == MXML_OPAQUE) str = mxmlGetOpaque(value);
+											else if (type == MXML_TEXT) str = mxmlGetText(value, NULL);
+											else {
+												console_printf(1, "[ERROR] TYPE NOT OPAQUE OR TEXT!\n");
+												mxmlDelete(value);
+												return NULL;
+											}
+											if (!str) {
+												console_printf(1, "[ERROR] NO STRING!\n");
+												mxmlDelete(value);
+												return NULL;
+											}
+											char* newstr = (char*)malloc(strlen(str) + 1);
+											if (!newstr) {
+												console_printf(1, "[ERROR] NO MEMORY!\n");
+												mxmlDelete(value);
+												return NULL;
+											}
+											strcpy(newstr, str);
+											mxmlDelete(value);
+											return newstr;
 									}
-									
-									// Dump update
-									if (dumpPart[2])
+
+									char *disc_game_id = meta_xml_getid(tree);
+									if (disc_game_id == NULL)
 									{
-										snprintf(usb_path, sizeof(usb_path), "storage_mlc01:/usr/title/0005000C/%s", disc_game_id);
-										snprintf(mlc_path, sizeof(mlc_path), "storage_usb01:/usr/title/0005000C/%s", disc_game_id);
-										snprintf(disc_dump_path, sizeof(disc_dump_path), "disc/%s/dlc", disc_game_name);
-										dumpFunc(usb_path, disc_dump_path, 0, dump_source, dump_target, 1);
-										dumpFunc(mlc_path, disc_dump_path, 0, dump_source, dump_target, 1);
+										console_printf(1, "Failed to get game ID!");
+										fetched_metadata = 0;
 									}
-									
-									// Saves
-									if (dumpPart[3])
+									char *disc_game_name = meta_xml_getname(tree);
+									if (disc_game_name == NULL)
 									{
-										snprintf(usb_path, sizeof(usb_path), "storage_mlc01:/usr/save/00050000/%s", disc_game_id);
-										snprintf(mlc_path, sizeof(mlc_path), "storage_usb01:/usr/save/00050000/%s", disc_game_id);
-										snprintf(disc_dump_path, sizeof(disc_dump_path), "disc/%s/save", disc_game_name);
-										dumpFunc(usb_path, disc_dump_path, 0, dump_source, dump_target, 1);
-										dumpFunc(mlc_path, disc_dump_path, 0, dump_source, dump_target, 1);
+										console_printf(1, "Failed to get game name!");
+										fetched_metadata = 0;
+									}
+
+									mxmlDelete(tree);
+									fclose(fp);
+
+									unmount_fs("dev");
+
+									IOSUHAX_FSA_Close(fsaFd);
+									IOSUHAX_Close();
+
+									for(int j = 0, k = 0; j < 256 && k < 256; ++j, ++k) {
+									  while(disc_game_name[k] == ':' || disc_game_name[k] == '.' || disc_game_name[k] == 0) { // skip all ':', break if we surpass limit
+									    if (disc_game_name[k] == 0) { // we hit a string end, pretend surpass limit for the other if outside this loop
+									      k = 256;
+									      break;
+									    }
+									    ++k;
+									    if (k >= 256) break;
+									  }
+									  if (k >= 256) { // we surpass limit, string end, set the null
+									    disc_game_name[j] = 0;
+									    break;
+									  }
+									  disc_game_name[j] = disc_game_name[k];
+									}
+
+									if (fetched_metadata) {
+										console_printf(1, "Started dumping...");
+
+										char usb_path[255], mlc_path[255], disc_dump_path[255];
+
+										// Dump game
+										if (dumpPart[0])
+										{
+											snprintf(disc_dump_path, sizeof(disc_dump_path), "disc/%s/game", disc_game_name);
+											dumpFunc((dump_source) ? usb_selection_paths[i] : mlc_selection_paths[i], disc_dump_path, dev, dump_source, dump_target, 0);
+										}
+
+										// Dump update
+										if (dumpPart[1])
+										{
+											snprintf(usb_path, sizeof(usb_path), "storage_mlc01:/usr/title/0005000E/%s", disc_game_id);
+											snprintf(mlc_path, sizeof(mlc_path), "storage_usb01:/usr/title/0005000E/%s", disc_game_id);
+											snprintf(disc_dump_path, sizeof(disc_dump_path), "disc/%s/update", disc_game_name);
+											dumpFunc(usb_path, disc_dump_path, 0, dump_source, dump_target, 1);
+											dumpFunc(mlc_path, disc_dump_path, 0, dump_source, dump_target, 1);
+										}
+
+										// Dump update
+										if (dumpPart[2])
+										{
+											snprintf(usb_path, sizeof(usb_path), "storage_mlc01:/usr/title/0005000C/%s", disc_game_id);
+											snprintf(mlc_path, sizeof(mlc_path), "storage_usb01:/usr/title/0005000C/%s", disc_game_id);
+											snprintf(disc_dump_path, sizeof(disc_dump_path), "disc/%s/dlc", disc_game_name);
+											dumpFunc(usb_path, disc_dump_path, 0, dump_source, dump_target, 1);
+											dumpFunc(mlc_path, disc_dump_path, 0, dump_source, dump_target, 1);
+										}
+
+										// Saves
+										if (dumpPart[3])
+										{
+											snprintf(usb_path, sizeof(usb_path), "storage_mlc01:/usr/save/00050000/%s", disc_game_id);
+											snprintf(mlc_path, sizeof(mlc_path), "storage_usb01:/usr/save/00050000/%s", disc_game_id);
+											snprintf(disc_dump_path, sizeof(disc_dump_path), "disc/%s/save", disc_game_name);
+											dumpFunc(usb_path, disc_dump_path, 0, dump_source, dump_target, 1);
+											dumpFunc(mlc_path, disc_dump_path, 0, dump_source, dump_target, 1);
+										}
+									} else {
+										console_printf(1, "[ERROR] Failed to fetch metadata");
 									}
 								}
 							}
