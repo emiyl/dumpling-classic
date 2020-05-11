@@ -10,7 +10,7 @@
 
 ## Installation
 
-Dumpling uses iosuhax and requires either MochaCFW or (Coldboot) Haxchi, and won't work without it.
+Dumpling uses iosuhax and requires a CFW such as MochaCFW or (Coldboot) Haxchi, and won't work without it.
 
 To install, simply download the dumpling `.zip` file from the [releases](https://github.com/emiyl/dumpling/releases/latest) page, and extract it to the root of your SD card.
 
