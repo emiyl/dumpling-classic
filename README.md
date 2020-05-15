@@ -27,7 +27,7 @@ To install, simply download the dumpling `.zip` file from the [releases](https:/
 
 ## Troubleshooting
 
-- A user reported that dumpling would freeze mid-dump. This was caused by a bad SD card. Ensure it's formatted properly before dumping.
+- A user reported that dumpling would freeze mid-dump. This was caused by a bad SD card. Ensure that it is formatted properly before dumping.
 
 ## To-do
 
