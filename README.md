@@ -29,6 +29,10 @@ To install, simply download the dumpling `.zip` file from the [releases](https:/
 
 - A user reported that dumpling would freeze mid-dump. This was caused by a bad SD card. Ensure that it is formatted properly before dumping.
 
+## Known Issues
+
+On games which have folders with large file counts (like the BotW update) can slow down massively when dumping. This is due to a hardware limitation that makes everything really damn slow with large folders. Just use FTP for that.
+
 ## To-do
 
 1. Support dumping of `otp.bin` and `seeprom.bin`
