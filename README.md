@@ -1,3 +1,7 @@
+# Software deprecated
+
+Use [dumpling-rework](https://github.com/emiyl/dumpling) instead
+
 <p align="center">
   <img src="dumpling.png" alt="Logo" width="80" height="80">
 
